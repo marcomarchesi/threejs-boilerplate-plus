@@ -1,0 +1,190 @@
+<html>
+  <head>
+    <title>Raceeeng!</title>
+    <style>
+        body {
+      /* set margin to 0 and overflow to hidden, to go fullscreen */
+      margin: 0;
+      overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="text/javascript" src="js/three.min.js"></script>
+    <script type="text/javascript" src="js/CelShader.js"></script>
+    <script type="text/javascript" src="js/stats.min.js"></script>
+    <script type="text/javascript" src="js/FirstPersonControls.js"></script>
+    <script type="text/javascript" src="js/TrackballControls.js"></script>
+    <script type="text/javascript" src="js/JSONLoader.js"></script>
+    <script type="text/javascript" src="js/dat.gui.min.js"></script>
+    <script type="text/javascript" src="js/EffectComposer.js"></script>
+    <script type="text/javascript" src="js/RenderPass.js"></script>
+    <script type="text/javascript" src="js/ShaderPass.js"></script>
+    <script type="text/javascript" src="js/MaskPass.js"></script>
+    <script type="text/javascript" src="js/CopyShader.js"></script>
+    <script type="text/javascript">
+
+      //Global variables
+      var scene,sceneBG,camera,cameraBG,renderer,composer,controls;
+      var robot_mesh,terrain_mesh;
+      var light,loader;
+      var clock = new THREE.Clock();
+      var gui = new dat.GUI();
+
+            function init() {
+
+            clock = new THREE.Clock();
+
+            // create a scene, that will hold all our elements such as objects, cameras and lights.
+            scene = new THREE.Scene();
+
+            // create a camera, which defines where we're looking at.
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            // create a render, sets the background color and the size
+            renderer = new THREE.WebGLRenderer();
+            renderer.setClearColor(0x000000, 1.0);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMapEnabled = true;
+
+                 //Create a light
+            light = new THREE.SpotLight(0xffffff);
+            light.position.set(10,20,20);
+            light.shadowCameraNear = 20;
+            light.shadowCameraFar = 50;
+            light.castShadow = true;
+            scene.add(light);
+
+            gui.addColor(light,'color');
+
+
+            var ambientLight = new THREE.AmbientLight( 0xffffff ); // soft white light
+            scene.add(ambientLight );
+
+                  // load models
+            loader = new THREE.JSONLoader();
+            loadTerrain();
+            loadRobot();
+
+            //TODO 
+            // Add progress bar for loading assets
+            setTimeout(function(){}, 2000);
+
+            // position and point the camera to the center of the scene
+            camera.position.x = 0;
+            camera.position.y = 1.5;
+            camera.position.z = 6;
+            camera.lookAt(scene.position);
+
+
+
+            controls = new THREE.FirstPersonControls( camera );
+            controls.movementSpeed = 1;
+            controls.lookSpeed = 0.01;
+            controls.lookVertical = false;  
+            // controls = new THREE.TrackballControls( camera );
+
+            // add extras
+            
+            addStats();
+
+
+            // add background using a camera
+            cameraBG = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, -10000, 10000);
+            cameraBG.position.z = 50;
+            sceneBG = new THREE.Scene();
+
+            var materialColor = new THREE.MeshBasicMaterial({ map: THREE.ImageUtils.loadTexture("./textures/starry_background.jpg"), depthTest: false });
+            var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materialColor);
+            bgPlane.position.z = -100;
+            bgPlane.scale.set(window.innerWidth * 2, window.innerHeight * 2, 1);
+            sceneBG.add(bgPlane);
+
+            // setup the composer steps
+            // first render the background
+            var bgPass = new THREE.RenderPass(sceneBG, cameraBG);
+            // next render the scene (rotating earth), without clearing the current output
+            var renderPass = new THREE.RenderPass(scene, camera);
+            renderPass.clear = false;
+            // finally copy the result to the screen
+            var effectCopy = new THREE.ShaderPass(THREE.CopyShader);
+            effectCopy.renderToScreen = true;
+
+            // add these passes to the composer
+            composer = new THREE.EffectComposer(renderer);
+            composer.addPass(bgPass);
+            composer.addPass(renderPass);
+            composer.addPass(effectCopy);
+
+            // add the output of the renderer to the html element
+            document.body.appendChild(renderer.domElement);
+
+            // call the render function, after the first render, interval is determined
+            // by requestAnimationFrame
+            render();
+        }
+    
+      function render() {
+
+        controls.update( clock.getDelta() );
+        renderer.autoClear = false;
+        composer.render(); //instead of renderer.render();
+        requestAnimationFrame( render );
+        stats.update();
+      }
+
+      function addStats(){
+        stats = new Stats();
+        stats.setMode(0);
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.left = '0px';
+        stats.domElement.style.top = '0px';
+        document.body.appendChild(stats.domElement);
+      }
+
+      // load the robot
+      function loadRobot(){
+        loader.load("./models/robot.js",
+          function(model,materials){
+            materials[0].shading = THREE.FlatShading;
+            // robot_mesh = new THREE.Mesh(model,new THREE.MeshFaceMaterial( materials ));
+            robot_mesh = new THREE.Mesh(model,materials[0]);
+            robot_mesh.name = 'robot';
+            robot_mesh.castShadow = true;
+            robot_mesh.position.y = 1.4;
+            scene.add(robot_mesh);
+            camera.lookAt(robot_mesh.position); 
+          },"./textures/");
+      }
+
+      //load the terrain
+      function loadTerrain(){
+          loader.load("./models/terrain.js",
+          function(model,materials){
+            materials[0].shading = THREE.FlatShading;
+            terrain_mesh = new THREE.Mesh(model,materials[0]);
+            terrain_mesh.name = 'terrain';
+            terrain_mesh.receiveShadow = true;
+            scene.add(terrain_mesh);
+          },"./textures/");
+      }
+
+            /**
+       * Function handles the resize event. This make sure the camera and the renderer
+       * are updated at the correct moment.
+       */
+      function handleResize() {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      window.onload = init;
+      // calls the handleResize function when the window is resized
+      window.addEventListener('resize', handleResize, false);
+
+    </script>
+  </body>
+</html>
+
+
