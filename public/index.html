@@ -1,34 +1,39 @@
 <html>
   <head>
-    <title>A Threejs Template</title>
+    <title>A Threejs Scene</title>
     <style>
         body {
       /* set margin to 0 and overflow to hidden, to go fullscreen */
       margin: 0;
       overflow: hidden;
-      background-color: #a7fae6;
+      background-color: #264A60;  /*BLUE 70*/
       }
     </style>
   </head>
   <body>
-    <script type="text/javascript" src="js/three.min.js"></script>
+    <script type="text/javascript" src="js/Three.js"></script>
     <script type="text/javascript" src="js/stats.min.js"></script>
     <script type="text/javascript" src="js/FirstPersonControls.js"></script>
     <script type="text/javascript" src="js/JSONLoader.js"></script>
+    <script type="text/javascript" src="js/ParticleEngine.js"></script>
     <script type="text/javascript">
 
       //Global variables
-      var scene,sceneBG,camera,cameraBG,renderer,composer,controls;
-      var robot_mesh,scene_mesh;
+      var scene,camera,renderer,controls;
+      var scene_mesh;
       var light,loader;
       var clock = new THREE.Clock();
+      var engine = new ParticleEngine();
 
+      var particles, geometry, materials = [], parameters, i, h, color, size;
+    
+      
       function init() {
 
       clock = new THREE.Clock();
-
       // create a scene, that will hold all our elements such as objects, cameras and lights.
       scene = new THREE.Scene();
+
 
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -40,7 +45,7 @@
       renderer.shadowMapEnabled = true;
 
       //Create a light
-      light = new THREE.SpotLight(0xffffff);
+      light = new THREE.SpotLight(0xC0E6FF);
       light.position.set(0,20,0);
       light.shadowCameraNear = 20;
       light.shadowCameraFar = 50;
@@ -48,9 +53,36 @@
       scene.add(light);
 
       // add fog
-      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.1 );
+      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.1);
+      rain =
+      {
+        positionStyle    : Type.CUBE,
+        positionBase     : new THREE.Vector3( 0, 0, 0 ),
+        positionSpread   : new THREE.Vector3( 300, 300, 300 ),
 
-      // var ambientLight = new THREE.AmbientLight( 0xff5003 ); // soft white light
+        velocityStyle    : Type.CUBE,
+        velocityBase     : new THREE.Vector3( 0, -400, 0 ),
+        velocitySpread   : new THREE.Vector3( 10, 50, 10 ), 
+        accelerationBase : new THREE.Vector3( 0, -10,0 ),
+        
+        // particleTexture : THREE.ImageUtils.loadTexture( 'textures/rain.png' ),
+
+        sizeBase    : 6.0,
+        sizeSpread  : 4.0,
+        colorBase   : new THREE.Vector3(1.0, 1.0, 1.0), // H,S,L
+        colorSpread : new THREE.Vector3(0.00, 0.0, 0.2),
+        opacityBase : 0.6,
+
+        particlesPerSecond : 5000,
+        particleDeathAge   : 1.0,   
+        emitterDeathAge    : 60
+      };
+
+      engine.setValues(rain);
+      engine.initialize();
+
+
+      // var ambientLight = new THREE.AmbientLight( 0xffffff ); // soft white light
       // scene.add(ambientLight );
 
       // load models
@@ -67,8 +99,9 @@
       controls.lookSpeed = 0.02;
       controls.lookVertical = true;  
 
-      // add extras
+      // // add extras
       addStats();
+
 
       // add the output of the renderer to the html element
       document.body.appendChild(renderer.domElement);
@@ -79,13 +112,16 @@
     }
     
       function render() {
-
-        controls.update( clock.getDelta() );
+        var dt = clock.getDelta();
+        controls.update( dt ); 
         renderer.autoClear = false;
         renderer.render(scene,camera);
-        requestAnimationFrame( render );
+        requestAnimationFrame( render ); 
         stats.update();
+        engine.update( dt * 0.5 );
       }
+
+      
 
       function addStats(){
         stats = new Stats();
@@ -95,7 +131,6 @@
         stats.domElement.style.top = '0px';
         document.body.appendChild(stats.domElement);
       }
-
 
       //load the scene
       function loadScene(){
@@ -111,7 +146,6 @@
             scene.add(scene_mesh);
           });
       }
-
             /**
        * Function handles the resize event. This make sure the camera and the renderer
        * are updated at the correct moment.
@@ -129,5 +163,7 @@
     </script>
   </body>
 </html>
+
+
 
 
