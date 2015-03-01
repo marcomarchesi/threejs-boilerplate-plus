@@ -24,16 +24,23 @@
     <script type="text/javascript" src="js/FirstPersonControls.js"></script>
     <script type="text/javascript" src="js/JSONLoader.js"></script>
     <script type="text/javascript" src="js/OculusRiftEffect.js"></script>
+    <script type="text/javascript" src="js/PathCamera.js"></script>
     <script type="text/javascript">
 
       //Global variables
       var container;
-      var scene,camera,renderer,controls;
+      var scene,renderer,controls;
+      var camera,pathCamera;
+      var path;
       var scene_mesh;
       var sphere_material,sphere_geometry;
       var light,loader;
       var effect;
       var clock = new THREE.Clock();
+
+      var pathEnabled = true;
+
+
     
       
       function init() {
@@ -45,6 +52,9 @@
       // create a scene, that will hold all our elements such as objects, cameras and lights.
       scene = new THREE.Scene();
 
+      
+      pathCamera = new THREE.PerspectiveCamera( 84, window.innerWidth / window.innerHeight, 0.01, 1000 );
+      path = new PathCamera(scene,pathCamera);
 
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
@@ -87,8 +97,8 @@
       camera.position.y = 1;
       camera.position.z = 0;
 
-      controls = new THREE.FirstPersonControls( camera );
-      controls.movementSpeed = 1;
+      controls = new THREE.FirstPersonControls( pathEnabled === true? pathCamera:camera);
+      controls.movementSpeed = 2;
       controls.lookSpeed = 0.02;
       controls.lookVertical = true;  
 
@@ -109,15 +119,16 @@
         controls.update( dt ); 
         renderer.autoClear = false;
 
+        //update path
+        path.update();
         //oculus rift 
-        effect.render( scene, camera );
+        // effect.render( scene, pathEnabled === true? pathCamera:camera);
         // uncomment below for no oculus
-        // renderer.render(scene,camera);
+        renderer.render(scene,pathEnabled === true? pathCamera:camera);
         requestAnimationFrame( render ); 
         stats.update();
+        
       }
-
-      
 
       function addStats(){
         stats = new Stats();
