@@ -32,6 +32,7 @@
       var scene,renderer,controls;
       var camera,pathCamera;
       var path;
+      var step = 0;         // camera step
       var scene_mesh;
       var sphere_material,sphere_geometry;
       var light,loader;
@@ -52,9 +53,19 @@
       // create a scene, that will hold all our elements such as objects, cameras and lights.
       scene = new THREE.Scene();
 
+      //add track
+var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
+new THREE.Vector3(-2.0,0.0,-4.0),
+new THREE.Vector3(2.0,0.0,-4.0),
+new THREE.Vector3(2.0,0.0,0.0),
+new THREE.Vector3(-2.0,0.0,0.0),
+new THREE.Vector3(-2.0,0.0,-4.0),
+] );
+
       
       pathCamera = new THREE.PerspectiveCamera( 84, window.innerWidth / window.innerHeight, 0.01, 1000 );
-      path = new PathCamera(scene,pathCamera);
+
+      path = new PathCamera(scene,pathCamera,sampleClosedSpline);
 
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
@@ -67,8 +78,8 @@
 
       // Here is the effect for the Oculus Rift
         // worldScale 100 means that 100 Units == 1m
-        effect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
-        effect.setSize( window.innerWidth, window.innerHeight );
+      effect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
+      effect.setSize( window.innerWidth, window.innerHeight );
 
       //Create a light
       light = new THREE.SpotLight(0xffa573);
@@ -120,7 +131,7 @@
         renderer.autoClear = false;
 
         //update path
-        path.update();
+        path.update(step);
         //oculus rift 
         // effect.render( scene, pathEnabled === true? pathCamera:camera);
         // uncomment below for no oculus
@@ -164,8 +175,55 @@
           renderer.setSize(window.innerWidth, window.innerHeight);
       }
 
+
+      function onKeyDown ( event ) {
+
+        console.log('key down');
+
+        //event.preventDefault();
+
+        switch ( event.keyCode ) {
+
+          case 38: /*up*/
+          case 87: /*W*/ step += 10; break;
+
+          case 37: /*left*/
+          case 65: /*A*/  break;
+
+          case 40: /*down*/
+          case 83: /*S*/ step -= 10; break;
+
+          case 39: /*right*/
+          case 68: /*D*/  break;
+
+        }
+
+      };
+
+      function onKeyUp( event ) {
+
+        switch( event.keyCode ) {
+
+          case 38: /*up*/
+          case 87: /*W*/  break;
+
+          case 37: /*left*/
+          case 65: /*A*/  break;
+
+          case 40: /*down*/
+          case 83: /*S*/  break;
+
+          case 39: /*right*/
+          case 68: /*D*/  break;
+
+        }
+
+      };
+
       window.onload = init;
       // calls the handleResize function when the window is resized
+      window.addEventListener( 'keydown', onKeyDown , false );
+      window.addEventListener( 'keyup', onKeyUp , false );
       window.addEventListener('resize', handleResize, false);
 
     </script>

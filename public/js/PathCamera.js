@@ -1,7 +1,7 @@
 /* PathCamera.js
 */
 
-function PathCamera(scene,camera){
+function PathCamera(scene,camera,curve){
 
   var SEGMENTS = 200;
   var RADIUS_SEGMENTS = 1;
@@ -12,15 +12,7 @@ function PathCamera(scene,camera){
   this.normal = new THREE.Vector3();
 
 
-  var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-  new THREE.Vector3( -10, 0, 10 ),
-  new THREE.Vector3( -5, 0, 5 ),
-  new THREE.Vector3( 0, 0, 0 ),
-  new THREE.Vector3( 5, 0, 5 ),
-  new THREE.Vector3( 10, 0, 10 )
-] );
-
-  this.path = new THREE.TubeGeometry(sampleClosedSpline, SEGMENTS, 2, RADIUS_SEGMENTS, true); //true == closed curve
+  this.path = new THREE.TubeGeometry(curve, SEGMENTS, 2, RADIUS_SEGMENTS, true); //true == closed curve
   this.pathMesh = new THREE.Mesh(this.path,
                 new THREE.LineBasicMaterial( { color : 0xff0000 } ));
   this.animation = true;
@@ -30,7 +22,6 @@ function PathCamera(scene,camera){
   this.pathMesh.scale.set( this.scale, this.scale, this.scale );
   this.parent = new THREE.Object3D();
   this.parent.position.y = 1;
-  this.parent.rotation.x = Math.PI;     //needed to right orientation
   this.scene = scene;
   this.scene.add(this.parent);
   this.parent.add(this.pathMesh);
@@ -39,15 +30,16 @@ function PathCamera(scene,camera){
  
 };
 
-PathCamera.prototype.update = function(){
+PathCamera.prototype.update = function(step){
       // Try Animate Camera Along Spline
       var time = Date.now();
-      var looptime = 20 * 1000;
-      var t = ( time % looptime ) / looptime;
+      var LOOP = 1000;
+      // var dt = step === 0 ? time : step;
+      var t = ( step % LOOP ) / LOOP;
 
-      var pos = this.path.parameters.path.getPointAt( t );
-      // console.log(pos);
-      pos.multiplyScalar( this.scale );
+      var position = this.path.parameters.path.getPointAt( t );
+      // console.log(position);
+      position.multiplyScalar( this.scale );
 
       // interpolation
       var segments = this.path.tangents.length;
@@ -63,9 +55,9 @@ PathCamera.prototype.update = function(){
 
       this.normal.copy( this.binormal ).cross( dir );
       // We move on a offset on its binormal
-      pos.add( this.normal.clone().multiplyScalar( this.offset ) );
+      position.add( this.normal.clone().multiplyScalar( this.offset ) );
 
-      this.pathCamera.position.copy( pos );
+      this.pathCamera.position.copy( position );
       // Camera Orientation 1 - default look at
       // pathCamera.lookAt( lookAt );
 
@@ -74,8 +66,10 @@ PathCamera.prototype.update = function(){
 
       // Camera Orientation 2 - up orientation via normal
       if (!this.lookAhead)
-        lookAt.copy( pos ).add( dir );
+        lookAt.copy( position ).add( dir );
       this.pathCamera.matrix.lookAt(this.pathCamera.position, lookAt, this.normal);
       this.pathCamera.rotation.setFromRotationMatrix( this.pathCamera.matrix, this.pathCamera.rotation.order );
-      this.parent.rotation.y += ( this.targetRotation - this.parent.rotation.y ) * 0.05;
+      this.parent.rotation.x = Math.PI;
+      // this.parent.rotation.y += ( this.targetRotation - this.parent.rotation.y ) * 0.05;
+      // this.parent.rotation.y += Math.PI/10000;
 };
