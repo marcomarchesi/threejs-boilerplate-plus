@@ -32,9 +32,7 @@ function PathCamera(scene,camera,curve){
 
 PathCamera.prototype.update = function(step){
       // Try Animate Camera Along Spline
-      var time = Date.now();
       var LOOP = 1000;
-      // var dt = step === 0 ? time : step;
       var t = ( step % LOOP ) / LOOP;
 
       var position = this.path.parameters.path.getPointAt( t );

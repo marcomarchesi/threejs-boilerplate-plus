@@ -20,6 +20,9 @@
   </head>
   <body>
     <script type="text/javascript" src="js/three.min.js"></script>
+    <script type="text/javascript" src="js/tween.min.js"></script>
+    <script type="text/javascript" src="js/ShaderParticles.min.js"></script>
+    <script type="text/javascript" src="js/GenerateParticle.js"></script>
     <script type="text/javascript" src="js/stats.min.js"></script>
     <script type="text/javascript" src="js/FirstPersonControls.js"></script>
     <script type="text/javascript" src="js/JSONLoader.js"></script>
@@ -41,9 +44,9 @@
 
       var pathEnabled = true;
 
+      var particleSystem;
 
-    
-      
+
       function init() {
 
       container = document.createElement('div');
@@ -53,22 +56,26 @@
       // create a scene, that will hold all our elements such as objects, cameras and lights.
       scene = new THREE.Scene();
 
+      //add particle system
+      particleSystem = new GenerateParticle();
+      scene.add(particleSystem);
+
       //add track
-var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-new THREE.Vector3(-2.0,0.0,-4.0),
-new THREE.Vector3(2.0,0.0,-4.0),
-new THREE.Vector3(2.0,0.0,0.0),
-new THREE.Vector3(-2.0,0.0,0.0),
-new THREE.Vector3(-2.0,0.0,-4.0),
-] );
+      var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
+      new THREE.Vector3(-2.0,0.0,-4.0),
+      new THREE.Vector3(2.0,0.0,-4.0),
+      new THREE.Vector3(2.0,0.0,0.0),
+      new THREE.Vector3(-2.0,0.0,0.0),
+      new THREE.Vector3(-2.0,0.0,-4.0)
+      ] );
 
       
       pathCamera = new THREE.PerspectiveCamera( 84, window.innerWidth / window.innerHeight, 0.01, 1000 );
-
       path = new PathCamera(scene,pathCamera,sampleClosedSpline);
 
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
+
 
       // create a render, sets the background color and the size
       renderer = new THREE.WebGLRenderer({antialias:true,alpha: true});
@@ -93,8 +100,6 @@ new THREE.Vector3(-2.0,0.0,-4.0),
 
       // add fog
       scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.1);
-
-
 
       var ambientLight = new THREE.AmbientLight( 0xffa573 ); // soft white light
       scene.add(ambientLight );
@@ -122,16 +127,25 @@ new THREE.Vector3(-2.0,0.0,-4.0),
 
       // call the render function, after the first render, interval is determined
       // by requestAnimationFrame
-      render();
+      render(0.016);
     }
+
     
-      function render() {
-        var dt = clock.getDelta();
-        controls.update( dt ); 
+      function render(dt) {
+        // var dt = clock.getDelta();
+        // controls.update( dt ); 
         renderer.autoClear = false;
 
-        //update path
-        path.update(step);
+
+        // update particleSystem
+        // particleSystem.update(scene,dt);
+        for ( i = 0; i < scene.children.length; i ++ ) {
+          var object = scene.children[ i ];
+          if ( object instanceof THREE.PointCloud ) {
+            object.rotation.y = dt/4000 * ( i < 4 ? i + 1 : - ( i + 1 ) );
+          }
+        }
+
         //oculus rift 
         // effect.render( scene, pathEnabled === true? pathCamera:camera);
         // uncomment below for no oculus
@@ -154,8 +168,6 @@ new THREE.Vector3(-2.0,0.0,-4.0),
       function loadScene(){
           loader.load("./models/scene.js",
           function(model,materials){
-            // for(var i = 0;i<materials.length;++i)
-            //   materials[i].shading = THREE.FlatShading;
             scene_mesh = new THREE.Mesh(model,new THREE.MeshFaceMaterial( materials ));
             scene_mesh.name = 'scene';
             scene_mesh.rotation.y = Math.PI;
@@ -185,13 +197,21 @@ new THREE.Vector3(-2.0,0.0,-4.0),
         switch ( event.keyCode ) {
 
           case 38: /*up*/
-          case 87: /*W*/ step += 10; break;
+          case 87: /*W*/ 
+            step += 20;
+            //update path
+            path.update(step);
+          break;
 
           case 37: /*left*/
           case 65: /*A*/  break;
 
           case 40: /*down*/
-          case 83: /*S*/ step -= 10; break;
+          case 83: /*S*/ 
+            step -= 20; 
+            //update path
+            path.update(step);
+          break;
 
           case 39: /*right*/
           case 68: /*D*/  break;
