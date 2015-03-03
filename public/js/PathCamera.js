@@ -22,6 +22,7 @@ function PathCamera(scene,camera,curve){
   this.pathMesh.scale.set( this.scale, this.scale, this.scale );
   this.parent = new THREE.Object3D();
   this.parent.position.y = 1;
+  // this.parent.rotation.x = Math.PI;
   this.scene = scene;
   this.scene.add(this.parent);
   this.parent.add(this.pathMesh);
@@ -51,7 +52,8 @@ PathCamera.prototype.update = function(step){
 
       var dir = this.path.parameters.path.getTangentAt( t );
 
-      this.normal.copy( this.binormal ).cross( dir );
+      // this.normal.copy( this.binormal ).cross( dir );
+      this.normal = new THREE.Vector3( 0, 1, 0 );
       // We move on a offset on its binormal
       position.add( this.normal.clone().multiplyScalar( this.offset ) );
 
@@ -67,7 +69,7 @@ PathCamera.prototype.update = function(step){
         lookAt.copy( position ).add( dir );
       this.pathCamera.matrix.lookAt(this.pathCamera.position, lookAt, this.normal);
       this.pathCamera.rotation.setFromRotationMatrix( this.pathCamera.matrix, this.pathCamera.rotation.order );
-      this.parent.rotation.x = Math.PI;
+      // this.parent.rotation.x = Math.PI;
       // this.parent.rotation.y += ( this.targetRotation - this.parent.rotation.y ) * 0.05;
       // this.parent.rotation.y += Math.PI/10000;
 };

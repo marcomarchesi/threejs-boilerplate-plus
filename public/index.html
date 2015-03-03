@@ -28,6 +28,7 @@
     <script type="text/javascript" src="js/JSONLoader.js"></script>
     <script type="text/javascript" src="js/OculusRiftEffect.js"></script>
     <script type="text/javascript" src="js/PathCamera.js"></script>
+    <script type="text/javascript" src="js/DK2Controls.js"></script>
     <script type="text/javascript">
 
       //Global variables
@@ -39,10 +40,10 @@
       var scene_mesh;
       var sphere_material,sphere_geometry;
       var light,loader;
-      var effect;
+      var oculusRenderer;
       var clock = new THREE.Clock();
 
-      var pathEnabled = true;
+      var pathEnabled = false; //true for runner camera
 
       var particleSystem;
 
@@ -83,10 +84,10 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMapEnabled = true;
 
-      // Here is the effect for the Oculus Rift
+      // Here is the oculusRenderer for the Oculus Rift
         // worldScale 100 means that 100 Units == 1m
-      effect = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
-      effect.setSize( window.innerWidth, window.innerHeight );
+      oculusRenderer = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
+      oculusRenderer.setSize( window.innerWidth, window.innerHeight );
 
       //Create a light
       light = new THREE.SpotLight(0xffa573);
@@ -113,10 +114,12 @@
       camera.position.y = 1;
       camera.position.z = 0;
 
-      controls = new THREE.FirstPersonControls( pathEnabled === true? pathCamera:camera);
-      controls.movementSpeed = 2;
-      controls.lookSpeed = 0.02;
-      controls.lookVertical = true;  
+      controls = new THREE.DK2Controls(pathEnabled === true? pathCamera:camera);
+
+      // controls = new THREE.FirstPersonControls( pathEnabled === true? pathCamera:camera);
+      // controls.movementSpeed = 2;
+      // controls.lookSpeed = 0.02;
+      // controls.lookVertical = true;  
 
       // // add extras
       addStats();
@@ -132,11 +135,11 @@
 
     
       function render(dt) {
-        // var dt = clock.getDelta();
-        // controls.update( dt ); 
+        var dt = clock.getDelta();
+        controls.update( dt ); 
         renderer.autoClear = false;
-
-
+        step +=2;
+        path.update(step);
         // update particleSystem
         // particleSystem.update(scene,dt);
         for ( i = 0; i < scene.children.length; i ++ ) {
@@ -147,9 +150,9 @@
         }
 
         //oculus rift 
-        // effect.render( scene, pathEnabled === true? pathCamera:camera);
+        oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
         // uncomment below for no oculus
-        renderer.render(scene,pathEnabled === true? pathCamera:camera);
+        // renderer.render(scene,pathEnabled === true? pathCamera:camera);
         requestAnimationFrame( render ); 
         stats.update();
         
@@ -183,14 +186,12 @@
       function handleResize() {
           camera.aspect = window.innerWidth / window.innerHeight;
           camera.updateProjectionMatrix();
-          effect.setSize( window.innerWidth, window.innerHeight );
+          oculusRenderer.setSize( window.innerWidth, window.innerHeight );
           renderer.setSize(window.innerWidth, window.innerHeight);
       }
 
 
       function onKeyDown ( event ) {
-
-        console.log('key down');
 
         //event.preventDefault();
 
@@ -221,7 +222,6 @@
       };
 
       function onKeyUp( event ) {
-
         switch( event.keyCode ) {
 
           case 38: /*up*/
@@ -237,7 +237,6 @@
           case 68: /*D*/  break;
 
         }
-
       };
 
       window.onload = init;

@@ -16,7 +16,8 @@
   },
   "devDependencies": {
     "chalk": "^0.5.1",
-    "express": "^4.11.1"
+    "express": "^4.11.1",
+    "node-ovrsdk": "^0.3.22"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
