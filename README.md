@@ -1,5 +1,5 @@
 # threejs-boilerplate-plus
-A template for threejs-based projects. it runs a server with node and express, client side is located in /public folder.
+A template for threejs-based projects. it runs a server with node and express, client side is located in `/public` folder.
 
   - Import Assets
   - First Person mouse+keyboard controls

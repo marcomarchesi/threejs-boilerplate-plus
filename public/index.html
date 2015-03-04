@@ -6,23 +6,22 @@
       /* set margin to 0 and overflow to hidden, to go fullscreen */
       margin: 0;
       overflow: hidden;
-      /*background-color: #264A60;  /*BLUE 70*/
-      background: #cefffa;
+      background-color: #264A60;  /*BLUE 70
+      /*background: #cefffa;
       background: -moz-linear-gradient(top,  #cefffa 0%, #f2b51d 89%);
       background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#cefffa), color-stop(89%,#f2b51d));
       background: -webkit-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
       background: -o-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
       background: -ms-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
       background: linear-gradient(to bottom,  #cefffa 0%,#f2b51d 89%);
-      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cefffa', endColorstr='#f2b51d',GradientType=0 );
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cefffa', endColorstr='#f2b51d',GradientType=0 );*/
       }
     </style>
   </head>
   <body>
     <script type="text/javascript" src="js/three.min.js"></script>
     <script type="text/javascript" src="js/tween.min.js"></script>
-    <script type="text/javascript" src="js/ShaderParticles.min.js"></script>
-    <script type="text/javascript" src="js/GenerateParticle.js"></script>
+    <script type="text/javascript" src="js/ParticleEngine.js"></script>
     <script type="text/javascript" src="js/stats.min.js"></script>
     <script type="text/javascript" src="js/FirstPersonControls.js"></script>
     <script type="text/javascript" src="js/JSONLoader.js"></script>
@@ -33,6 +32,9 @@
 
       //Global variables
       var container;
+
+      var textContainer;
+
       var scene,renderer,controls;
       var camera,pathCamera;
       var path;
@@ -43,10 +45,10 @@
       var oculusRenderer;
       var clock = new THREE.Clock();
 
-      var pathEnabled = false; //true for runner camera
+      var pathEnabled = true; //true for runner camera
+      var oculusEnabled = false;
 
       var particleSystem;
-
 
       function init() {
 
@@ -55,24 +57,35 @@
 
       clock = new THREE.Clock();
       // create a scene, that will hold all our elements such as objects, cameras and lights.
+
+      /*************************
+                SCENE
+      *************************/
       scene = new THREE.Scene();
 
-      //add particle system
-      particleSystem = new GenerateParticle();
-      scene.add(particleSystem);
+      //add particle system for raining
+      particleSystem = new ParticleEngine();
+      particleSystem.start();
 
       //add track
       var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-      new THREE.Vector3(-2.0,0.0,-4.0),
-      new THREE.Vector3(2.0,0.0,-4.0),
-      new THREE.Vector3(2.0,0.0,0.0),
-      new THREE.Vector3(-2.0,0.0,0.0),
-      new THREE.Vector3(-2.0,0.0,-4.0)
+          new THREE.Vector3(1.7,-0.11,-2.54),
+          new THREE.Vector3(1.61,0.02,-0.73),
+          new THREE.Vector3(0.14,-0.03,0.04),
+          new THREE.Vector3(-1.14,-0.19,-0.43),
+          new THREE.Vector3(-1.04,0.0,-2.25),
+          new THREE.Vector3(-0.76,-0.08,-3.31),
+          new THREE.Vector3(1.81,-0.32,-4.36),
+          new THREE.Vector3(1.78,-0.07,-3.43),
+          new THREE.Vector3(1.7,-0.11,-2.54)
       ] );
-
       
       pathCamera = new THREE.PerspectiveCamera( 84, window.innerWidth / window.innerHeight, 0.01, 1000 );
-      path = new PathCamera(scene,pathCamera,sampleClosedSpline);
+      path = new PathCamera(pathCamera,sampleClosedSpline);
+      var curveGeometry = new THREE.TubeGeometry(sampleClosedSpline, 200, 1, 1, true); //true == closed curve
+      var pathMesh = new THREE.Mesh(curveGeometry,
+                new THREE.LineBasicMaterial( { color : 0xff0000 } ));
+      scene.add(pathMesh);
 
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
@@ -100,33 +113,39 @@
       scene.add(light);
 
       // add fog
-      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.1);
+      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.15);
 
-      var ambientLight = new THREE.AmbientLight( 0xffa573 ); // soft white light
+      // var ambientLight = new THREE.AmbientLight( 0xffa573 ); // soft white light
+      var ambientLight = new THREE.AmbientLight( 0x5596E6 );
       scene.add(ambientLight );
 
-      // load models
+      // load scene model
       loader = new THREE.JSONLoader();
       loadScene();
 
-      // position and point the camera to the center of the scene
+      // position and point the default camera to the center of the scene
       camera.position.x = 0;
       camera.position.y = 1;
       camera.position.z = 0;
 
+      // Oculus DK2 controls
+
+      if(oculusEnabled == true)
       controls = new THREE.DK2Controls(pathEnabled === true? pathCamera:camera);
+      else{
+        controls = new THREE.FirstPersonControls( pathEnabled === true? pathCamera:camera);
+        controls.movementSpeed = 2;
+        controls.lookSpeed = 0.02;
+        controls.lookVertical = true;  
+      }
 
-      // controls = new THREE.FirstPersonControls( pathEnabled === true? pathCamera:camera);
-      // controls.movementSpeed = 2;
-      // controls.lookSpeed = 0.02;
-      // controls.lookVertical = true;  
-
-      // // add extras
+      // // add fps stats
       addStats();
 
 
       // add the output of the renderer to the html element
       container.appendChild(renderer.domElement);
+
 
       // call the render function, after the first render, interval is determined
       // by requestAnimationFrame
@@ -135,24 +154,23 @@
 
     
       function render(dt) {
-        var dt = clock.getDelta();
-        controls.update( dt ); 
-        renderer.autoClear = false;
-        step +=2;
-        path.update(step);
-        // update particleSystem
-        // particleSystem.update(scene,dt);
-        for ( i = 0; i < scene.children.length; i ++ ) {
-          var object = scene.children[ i ];
-          if ( object instanceof THREE.PointCloud ) {
-            object.rotation.y = dt/4000 * ( i < 4 ? i + 1 : - ( i + 1 ) );
-          }
-        }
+        var delta = clock.getDelta();
 
-        //oculus rift 
-        oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
-        // uncomment below for no oculus
-        // renderer.render(scene,pathEnabled === true? pathCamera:camera);
+        if(!pathEnabled && !oculusEnabled)
+          controls.update( delta ); 
+
+        renderer.autoClear = false;
+        // step +=2;
+        // path.update(step);
+
+        // update particleSystem
+        particleSystem.update(dt);
+
+        //oculus rift
+        if(oculusEnabled == true)
+          oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
+        else
+          renderer.render(scene,pathEnabled === true? pathCamera:camera);
         requestAnimationFrame( render ); 
         stats.update();
         
@@ -218,7 +236,6 @@
           case 68: /*D*/  break;
 
         }
-
       };
 
       function onKeyUp( event ) {
