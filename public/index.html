@@ -48,7 +48,12 @@
       var pathEnabled = true; //true for runner camera
       var oculusEnabled = false;
 
-      var particleSystem;
+      // is it raining?
+      var isRaining = true;
+      var rain;
+
+      var cube;
+      var isTweening = false;
 
       function init() {
 
@@ -64,21 +69,19 @@
       scene = new THREE.Scene();
 
       //add particle system for raining
-      particleSystem = new ParticleEngine();
-      particleSystem.start();
+      rain = new ParticleEngine();
+      if(isRaining)
+        rain.start();
 
       //add track
-      var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-          new THREE.Vector3(1.7,-0.11,-2.54),
-          new THREE.Vector3(1.61,0.02,-0.73),
-          new THREE.Vector3(0.14,-0.03,0.04),
-          new THREE.Vector3(-1.14,-0.19,-0.43),
-          new THREE.Vector3(-1.04,0.0,-2.25),
-          new THREE.Vector3(-0.76,-0.08,-3.31),
-          new THREE.Vector3(1.81,-0.32,-4.36),
-          new THREE.Vector3(1.78,-0.07,-3.43),
-          new THREE.Vector3(1.7,-0.11,-2.54)
-      ] );
+      var sampleClosedSpline = new THREE.ClosedSplineCurve3([
+            new THREE.Vector3(0, -40, -40),
+            new THREE.Vector3(0, 40, -40),
+            new THREE.Vector3(0, 140, -40),
+            new THREE.Vector3(0, 40, 40),
+            new THREE.Vector3(0, -40, 40),
+          ]);
+      // sampleClosedSpline.rotation.z = Math.PI;
       
       pathCamera = new THREE.PerspectiveCamera( 84, window.innerWidth / window.innerHeight, 0.01, 1000 );
       path = new PathCamera(pathCamera,sampleClosedSpline);
@@ -112,6 +115,20 @@
       light.castShadow = true;
       scene.add(light);
 
+
+
+
+       var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
+       var cubeMaterial = new THREE.MeshLambertMaterial({
+         color: "red"
+       });
+       cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+       cube.castShadow = true;
+       cube.position.z = -5;
+       cube.position.y = 1;
+       cube.position.x = 3;
+       scene.add(cube);
+
       // add fog
       scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.15);
 
@@ -142,10 +159,8 @@
       // // add fps stats
       addStats();
 
-
       // add the output of the renderer to the html element
       container.appendChild(renderer.domElement);
-
 
       // call the render function, after the first render, interval is determined
       // by requestAnimationFrame
@@ -162,9 +177,10 @@
         renderer.autoClear = false;
         // step +=2;
         // path.update(step);
+        TWEEN.update();
 
-        // update particleSystem
-        particleSystem.update(dt);
+        // update rain
+        rain.update(dt);
 
         //oculus rift
         if(oculusEnabled == true)
@@ -217,9 +233,10 @@
 
           case 38: /*up*/
           case 87: /*W*/ 
+            path.takeStepForward(step,step+20, 800);
             step += 20;
             //update path
-            path.update(step);
+            // path.update(step);
           break;
 
           case 37: /*left*/
@@ -255,6 +272,46 @@
 
         }
       };
+
+      function takeStepForward(cube, start, end, time) {
+
+        console.log('Hello Cube!');
+        var widht = 4;
+        var cubeGeometry = cube.geometry;
+
+        if (!isTweening) {
+            var tween = new TWEEN.Tween( { x: start, cube: cube, previous: 0} )
+                    .to( { x: end }, time )
+                    .easing(TWEEN.Easing.Elastic.InOut)
+                    .onStart( function() {
+                        isTweening = true;
+                        cube.position.y+=-widht/2;
+                        cube.position.x+=-widht/2;
+                        cubeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation( widht/2,  widht/2, 0 ) );
+                    })
+                    .onUpdate( function () {
+                        cube.geometry.applyMatrix( new THREE.Matrix4().makeRotationZ( (this.x-this.previous) ) );
+
+                        cube.geometry.verticesNeedUpdate=true;
+                        cube.geometry.normalsNeedUpdate = true;
+
+                        cube.previous = this.x;
+                        this.previous = this.x;
+                    } )
+                    .onComplete(function() {
+                        cube.position.y+=widht/2;
+                        cube.position.x+=-widht/2;
+                        cubeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation( widht/2, -widht/2, 0 ) );
+
+                        cube.position.x=Math.round(cube.position.x);
+                        cube.position.y=Math.round(cube.position.y);
+                        cube.position.z=Math.round(cube.position.z);
+
+                        isTweening = false;
+                    })
+                    .start();
+        }
+    }
 
       window.onload = init;
       // calls the handleResize function when the window is resized
