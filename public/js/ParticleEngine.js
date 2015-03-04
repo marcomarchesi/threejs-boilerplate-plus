@@ -53,8 +53,7 @@ function ParticleEngine(){
 
     this.particles.rotation.y = Math.random() * 6;
     this.particles.rotation.z = Math.random() * 6;
-
-    
+  
 };
 
 ParticleEngine.prototype.start = function(){
@@ -78,6 +77,4 @@ ParticleEngine.prototype.update = function(dt){
     }
   }
 };
-
-
   

@@ -9,12 +9,11 @@ function PathCamera(camera,curve){
   var SEGMENTS = 200;
   var RADIUS_SEGMENTS = 1;
 
-  this.isTweening = false;
-
   this.normal = new THREE.Vector3( 0, 1, 0 );
 
 
   this.path = new THREE.TubeGeometry(curve, SEGMENTS, 2, RADIUS_SEGMENTS, true); //true == closed curve
+  this.startPoint = curve.points[0];
   this.pathMesh = new THREE.Mesh(this.path,
                 new THREE.LineBasicMaterial( { color : 0xff0000 } ));
   this.lookAhead = false;
@@ -25,13 +24,14 @@ function PathCamera(camera,curve){
   scene.add(this.parent);
   this.parent.add(this.pathMesh);
   this.pathCamera = camera;
+  this.pathCamera.position = this.startPoint;
   this.parent.add( this.pathCamera );
 
   this.update = function(step){
       // Try Animate Camera Along Spline
       var LOOP = 1000;
       var t = (step % LOOP)/LOOP;
-      // console.log(t);
+      console.log(t);
 
       var position = this.path.parameters.path.getPointAt( t );
       position.multiplyScalar( this.scale );
@@ -71,22 +71,19 @@ PathCamera.prototype.takeStep = function(start, end, time) {
 
         var self = this;
 
-        // if (!self.isTweening) {
             var tween = new TWEEN.Tween(pos )
                     .to(target, time )
                     .easing(TWEEN.Easing.Circular.Out)
                     .onStart( function() {
-                        self.isTweening = true;
+                      //TODO
                     })
                     .onUpdate( function () {
 
                       self.update(pos.x);
                     } )
                     .onComplete(function() {
-
-                        self.isTweening = false;
+                      //TODO
                     })
                     .start();
-        // }
 };
 

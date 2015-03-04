@@ -6,15 +6,15 @@
       /* set margin to 0 and overflow to hidden, to go fullscreen */
       margin: 0;
       overflow: hidden;
-      background-color: #264A60;  /*BLUE 70
-      /*background: #cefffa;
+      /*background-color: #264A60;  /*BLUE 70*/
+      background: #cefffa;
       background: -moz-linear-gradient(top,  #cefffa 0%, #f2b51d 89%);
       background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#cefffa), color-stop(89%,#f2b51d));
       background: -webkit-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
       background: -o-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
       background: -ms-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
       background: linear-gradient(to bottom,  #cefffa 0%,#f2b51d 89%);
-      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cefffa', endColorstr='#f2b51d',GradientType=0 );*/
+      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cefffa', endColorstr='#f2b51d',GradientType=0 );
       }
     </style>
   </head>
@@ -84,24 +84,19 @@
 
 
       //add track
-var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-new THREE.Vector3(1.7,-0.11,-2.54),
-new THREE.Vector3(1.61,0.02,-0.73),
-new THREE.Vector3(0.14,-0.03,0.04),
-new THREE.Vector3(-1.14,-0.19,-0.43),
-new THREE.Vector3(-1.04,0.0,-2.25),
-new THREE.Vector3(-0.76,-0.08,-3.31),
-new THREE.Vector3(1.81,-0.32,-4.36),
-new THREE.Vector3(1.78,-0.07,-3.43),
-new THREE.Vector3(1.7,-0.11,-2.54),
-] );
+      var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
+        new THREE.Vector3(2,0,-2),
+        new THREE.Vector3(2,0,2),
+        new THREE.Vector3(-2,0,2),
+        new THREE.Vector3(-2,0,-2),
+      ] );
       
       pathCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
       path = new PathCamera(pathCamera,sampleClosedSpline);
-      var curveGeometry = new THREE.TubeGeometry(sampleClosedSpline, 200, 1, 1, true); //true == closed curve
-      var pathMesh = new THREE.Mesh(curveGeometry,
-                new THREE.LineBasicMaterial( { color : 0xff0000 } ));
-      scene.add(pathMesh);
+      // var curveGeometry = new THREE.TubeGeometry(sampleClosedSpline, 200, 1, 1, true); //true == closed curve
+      // var pathMesh = new THREE.Mesh(curveGeometry,
+      //           new THREE.LineBasicMaterial( { color : 0xff0000 } ));
+      // scene.add(pathMesh);
 
 
       // create a camera, which defines where we're looking at.
@@ -146,7 +141,7 @@ new THREE.Vector3(1.7,-0.11,-2.54),
       scene.add(light);
 
       // add fog
-      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.15);
+      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.1);
 
       if(isRaining)
         ambientLightColor = RAIN_LIGHT;
@@ -200,8 +195,10 @@ new THREE.Vector3(1.7,-0.11,-2.54),
         }
           
         if ( keyboard.pressed("down") ){
-          path.takeStep(step,step-2, 400);
-          step -= 2;  
+          if(step>0){
+            path.takeStep(step,step-2, 400);
+            step -= 2; 
+          }
         }
 
         delta = clock.getDelta();
