@@ -1,11 +1,14 @@
-/* Particle Engine
-by Marco Marchesi
+/* 
+* Particle Engine
+* @author Marco Marchesi
+*
 */
 
 function ParticleEngine(){
 
   this.material;
   this.particles;
+  this.texture;
   this.enabled = false;
 
   this.geometry = new THREE.Geometry();
@@ -23,8 +26,29 @@ function ParticleEngine(){
 
     this.color = 0xaaaaaa;
     this.size  = Math.random()*0.05;
+    var img = THREE.ImageUtils.loadTexture('/textures/rain.png');
+    
 
-    this.material = new THREE.PointCloudMaterial( {fog:true,transparent:true,opacity:0.1,map: THREE.ImageUtils.loadTexture('/textures/rain.png')} );
+    // var textureImage = new Image();
+    // textureImage.src = '/textures/rain.png';
+
+    //  var imgWidth = imgHeight = 32;
+    //  var mapCanvas = document.createElement( 'canvas' );
+    //  mapCanvas.width = mapCanvas.height = 32;
+
+    //  this.texture = new THREE.Texture( mapCanvas );
+
+    //  textureImage.onload = function() {
+
+    //      // document.body.appendChild( mapCanvas );
+    //      var ctx = mapCanvas.getContext( '2d' );
+    //      ctx.rotate( Math.PI / 2 );
+    //      ctx.drawImage( textureImage, 0, 0, imgWidth, imgHeight );
+
+    //      texture.needsUpdate = true;
+    // }
+
+    this.material = new THREE.PointCloudMaterial( {fog:true,transparent:true,opacity:0.1,map: img} );
     this.particles = new THREE.PointCloud( this.geometry, this.material );
 
     this.particles.rotation.y = Math.random() * 6;
@@ -43,6 +67,8 @@ ParticleEngine.prototype.stop = function(){
 };
 
 ParticleEngine.prototype.update = function(dt){
+
+  this.particles.rotation.y += Math.PI/10;
   if (this.enabled){
       for ( i = 0; i < scene.children.length; i ++ ) {
         var object = scene.children[ i ];

@@ -1,4 +1,7 @@
-/* PathCamera.js
+/**
+* PathCamera.js
+* @author Marco Marchesi
+*
 */
 
 function PathCamera(camera,curve){
@@ -24,8 +27,11 @@ function PathCamera(camera,curve){
   this.pathCamera = camera;
   this.parent.add( this.pathCamera );
 
-  this.update = function(t){
+  this.update = function(step){
       // Try Animate Camera Along Spline
+      var LOOP = 1000;
+      var t = (step % LOOP)/LOOP;
+      // console.log(t);
 
       var position = this.path.parameters.path.getPointAt( t );
       position.multiplyScalar( this.scale );
@@ -41,12 +47,8 @@ function PathCamera(camera,curve){
       this.normal = new THREE.Vector3( 0, 1, 0 );
       // We move on a offset on its binormal
 
-      // console.log(position);
-      // position.add( this.normal.clone().multiplyScalar( this.offset ) ); 
-      // console.log(position);
-      // console.log(position);
-      // // this.pathCamera.position.copy( position );
-      // console.log(position);
+      position.add( this.normal.clone().multiplyScalar( this.offset ) ); 
+      this.pathCamera.position.copy( position );
       // Camera Orientation 1 - default look at
       // pathCamera.lookAt( lookAt );
 
@@ -62,32 +64,29 @@ function PathCamera(camera,curve){
 
 };
 
-
-
-PathCamera.prototype.takeStepForward = function(start, end, time) {
+PathCamera.prototype.takeStep = function(start, end, time) {
 
         var pos = {x:start};
         var target = {x:end};
 
         var self = this;
 
-        if (!self.isTweening) {
+        // if (!self.isTweening) {
             var tween = new TWEEN.Tween(pos )
                     .to(target, time )
-                    .easing(TWEEN.Easing.Linear.None)
+                    .easing(TWEEN.Easing.Circular.Out)
                     .onStart( function() {
                         self.isTweening = true;
                     })
                     .onUpdate( function () {
-                      var LOOP = 20;
-                      var t = (pos.x % LOOP)/LOOP;
-                      self.update(t);
+
+                      self.update(pos.x);
                     } )
                     .onComplete(function() {
 
                         self.isTweening = false;
                     })
                     .start();
-        }
+        // }
 };
 

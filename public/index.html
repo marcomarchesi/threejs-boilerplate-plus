@@ -28,9 +28,14 @@
     <script type="text/javascript" src="js/OculusRiftEffect.js"></script>
     <script type="text/javascript" src="js/PathCamera.js"></script>
     <script type="text/javascript" src="js/DK2Controls.js"></script>
+    <script src="js/KeyboardState.js"></script>
     <script type="text/javascript">
 
       //Global variables
+
+      var SUN_LIGHT = 0xffa573;
+      var RAIN_LIGHT = 0x5596E6;
+
       var container;
 
       var textContainer;
@@ -41,16 +46,26 @@
       var step = 0;         // camera step
       var scene_mesh;
       var sphere_material,sphere_geometry;
-      var light,loader;
+      var light;
+      var ambientLightColor = SUN_LIGHT;
+
+      var loader;
       var oculusRenderer;
       var clock = new THREE.Clock();
+      var delta;
+
+
+      var keyboard = new KeyboardState();
+
 
       var pathEnabled = true; //true for runner camera
       var oculusEnabled = false;
 
       // is it raining?
-      var isRaining = true;
+      var isRaining = false;
       var rain;
+
+
 
       var cube;
       var isTweening = false;
@@ -60,7 +75,6 @@
       container = document.createElement('div');
       document.body.appendChild(container);
 
-      clock = new THREE.Clock();
       // create a scene, that will hold all our elements such as objects, cameras and lights.
 
       /*************************
@@ -68,30 +82,46 @@
       *************************/
       scene = new THREE.Scene();
 
-      //add particle system for raining
-      rain = new ParticleEngine();
-      if(isRaining)
-        rain.start();
 
       //add track
-      var sampleClosedSpline = new THREE.ClosedSplineCurve3([
-            new THREE.Vector3(0, -40, -40),
-            new THREE.Vector3(0, 40, -40),
-            new THREE.Vector3(0, 140, -40),
-            new THREE.Vector3(0, 40, 40),
-            new THREE.Vector3(0, -40, 40),
-          ]);
-      // sampleClosedSpline.rotation.z = Math.PI;
+var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
+new THREE.Vector3(1.7,-0.11,-2.54),
+new THREE.Vector3(1.61,0.02,-0.73),
+new THREE.Vector3(0.14,-0.03,0.04),
+new THREE.Vector3(-1.14,-0.19,-0.43),
+new THREE.Vector3(-1.04,0.0,-2.25),
+new THREE.Vector3(-0.76,-0.08,-3.31),
+new THREE.Vector3(1.81,-0.32,-4.36),
+new THREE.Vector3(1.78,-0.07,-3.43),
+new THREE.Vector3(1.7,-0.11,-2.54),
+] );
       
-      pathCamera = new THREE.PerspectiveCamera( 84, window.innerWidth / window.innerHeight, 0.01, 1000 );
+      pathCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
       path = new PathCamera(pathCamera,sampleClosedSpline);
       var curveGeometry = new THREE.TubeGeometry(sampleClosedSpline, 200, 1, 1, true); //true == closed curve
       var pathMesh = new THREE.Mesh(curveGeometry,
                 new THREE.LineBasicMaterial( { color : 0xff0000 } ));
       scene.add(pathMesh);
 
+
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
+
+      var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
+       var cubeMaterial = new THREE.MeshLambertMaterial({
+         color: "red"
+       });
+       cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+       cube.castShadow = true;
+       cube.position.z = -5;
+       cube.position.y = 1;
+       cube.position.x = 3;
+       scene.add(cube);
+
+      //add particle system for raining
+      rain = new ParticleEngine();
+      if(isRaining)
+        rain.start();
 
 
       // create a render, sets the background color and the size
@@ -115,25 +145,15 @@
       light.castShadow = true;
       scene.add(light);
 
-
-
-
-       var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
-       var cubeMaterial = new THREE.MeshLambertMaterial({
-         color: "red"
-       });
-       cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-       cube.castShadow = true;
-       cube.position.z = -5;
-       cube.position.y = 1;
-       cube.position.x = 3;
-       scene.add(cube);
-
       // add fog
       scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.15);
 
-      // var ambientLight = new THREE.AmbientLight( 0xffa573 ); // soft white light
-      var ambientLight = new THREE.AmbientLight( 0x5596E6 );
+      if(isRaining)
+        ambientLightColor = RAIN_LIGHT;
+      else
+        ambientLightColor = SUN_LIGHT;
+
+      var ambientLight = new THREE.AmbientLight( ambientLightColor );
       scene.add(ambientLight );
 
       // load scene model
@@ -169,14 +189,28 @@
 
     
       function render(dt) {
-        var delta = clock.getDelta();
+
+        // var moveDistance = 5 * clock.getDelta(); 
+        keyboard.update();
+
+
+        if ( keyboard.pressed("up") ){
+          path.takeStep(step,step+2, 400);
+          step += 2;
+        }
+          
+        if ( keyboard.pressed("down") ){
+          path.takeStep(step,step-2, 400);
+          step -= 2;  
+        }
+
+        delta = clock.getDelta();
 
         if(!pathEnabled && !oculusEnabled)
           controls.update( delta ); 
 
         renderer.autoClear = false;
-        // step +=2;
-        // path.update(step);
+
         TWEEN.update();
 
         // update rain
@@ -222,101 +256,10 @@
           camera.updateProjectionMatrix();
           oculusRenderer.setSize( window.innerWidth, window.innerHeight );
           renderer.setSize(window.innerWidth, window.innerHeight);
-      }
-
-
-      function onKeyDown ( event ) {
-
-        //event.preventDefault();
-
-        switch ( event.keyCode ) {
-
-          case 38: /*up*/
-          case 87: /*W*/ 
-            path.takeStepForward(step,step+20, 800);
-            step += 20;
-            //update path
-            // path.update(step);
-          break;
-
-          case 37: /*left*/
-          case 65: /*A*/  break;
-
-          case 40: /*down*/
-          case 83: /*S*/ 
-            step -= 20; 
-            //update path
-            path.update(step);
-          break;
-
-          case 39: /*right*/
-          case 68: /*D*/  break;
-
-        }
-      };
-
-      function onKeyUp( event ) {
-        switch( event.keyCode ) {
-
-          case 38: /*up*/
-          case 87: /*W*/  break;
-
-          case 37: /*left*/
-          case 65: /*A*/  break;
-
-          case 40: /*down*/
-          case 83: /*S*/  break;
-
-          case 39: /*right*/
-          case 68: /*D*/  break;
-
-        }
-      };
-
-      function takeStepForward(cube, start, end, time) {
-
-        console.log('Hello Cube!');
-        var widht = 4;
-        var cubeGeometry = cube.geometry;
-
-        if (!isTweening) {
-            var tween = new TWEEN.Tween( { x: start, cube: cube, previous: 0} )
-                    .to( { x: end }, time )
-                    .easing(TWEEN.Easing.Elastic.InOut)
-                    .onStart( function() {
-                        isTweening = true;
-                        cube.position.y+=-widht/2;
-                        cube.position.x+=-widht/2;
-                        cubeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation( widht/2,  widht/2, 0 ) );
-                    })
-                    .onUpdate( function () {
-                        cube.geometry.applyMatrix( new THREE.Matrix4().makeRotationZ( (this.x-this.previous) ) );
-
-                        cube.geometry.verticesNeedUpdate=true;
-                        cube.geometry.normalsNeedUpdate = true;
-
-                        cube.previous = this.x;
-                        this.previous = this.x;
-                    } )
-                    .onComplete(function() {
-                        cube.position.y+=widht/2;
-                        cube.position.x+=-widht/2;
-                        cubeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation( widht/2, -widht/2, 0 ) );
-
-                        cube.position.x=Math.round(cube.position.x);
-                        cube.position.y=Math.round(cube.position.y);
-                        cube.position.z=Math.round(cube.position.z);
-
-                        isTweening = false;
-                    })
-                    .start();
-        }
-    }
+      }     
 
       window.onload = init;
       // calls the handleResize function when the window is resized
-      window.addEventListener( 'keydown', onKeyDown , false );
-      window.addEventListener( 'keyup', onKeyUp , false );
       window.addEventListener('resize', handleResize, false);
 
     </script>
