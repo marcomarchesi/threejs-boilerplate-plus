@@ -34,6 +34,7 @@ function PathCamera(camera,curve){
       console.log(t);
 
       var position = this.path.parameters.path.getPointAt( t );
+      console.log(position);
       position.multiplyScalar( this.scale );
 
       // interpolation
