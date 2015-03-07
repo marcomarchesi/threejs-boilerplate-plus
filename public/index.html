@@ -65,8 +65,6 @@
       var isRaining = false;
       var rain;
 
-
-
       var cube;
       var isTweening = false;
 
@@ -124,6 +122,8 @@
       renderer.setClearColor( 0xa7fae6, 1 );
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMapEnabled = true;
+      //shadow antialiasing
+      renderer.shadowMapType = THREE.PCFSoftShadowMap;
 
       // Here is the oculusRenderer for the Oculus Rift
         // worldScale 100 means that 100 Units == 1m
@@ -134,8 +134,7 @@
       light = new THREE.SpotLight(0xffa573);
       light.position.set(0,10,50);
       light.shadowCameraNear = 50;
-      light.shadowMapWidth = 1024;
-      light.shadowMapHeight = 1024;
+      light.shadowMapWidth = light.shadowMapHeight = 2048;
       light.shadowCameraFar = 5000;
       light.castShadow = true;
       scene.add(light);
