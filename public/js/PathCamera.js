@@ -14,24 +14,30 @@ function PathCamera(camera,curve){
 
   this.path = new THREE.TubeGeometry(curve, SEGMENTS, 2, RADIUS_SEGMENTS, true); //true == closed curve
   this.startPoint = curve.points[0];
-  this.pathMesh = new THREE.Mesh(this.path,
-                new THREE.LineBasicMaterial( { color : 0xff0000 } ));
+  // this.pathMesh = new THREE.Mesh(this.path,
+  //               new THREE.LineBasicMaterial( { color : 0xff0000 } ));
   this.lookAhead = false;
-  this.scale = 1.0;
+  this.scale = 0.8;
   this.offset = 0;
   this.parent = new THREE.Object3D();
+  
   this.parent.position.y = 1;
+  this.parent.position.x = -3;
+  // this.parent.position.z = 1.0;
   scene.add(this.parent);
-  this.parent.add(this.pathMesh);
+  // this.parent.add(this.pathMesh);
   this.pathCamera = camera;
   this.pathCamera.position = this.startPoint;
+  this.pathCamera.lookAt(this.startPoint);
+  // this.pathCamera.position = this.startPoint;
   this.parent.add( this.pathCamera );
+
 
   this.update = function(step){
       // Try Animate Camera Along Spline
       var LOOP = 1000;
       var t = (step % LOOP)/LOOP;
-      console.log(t);
+      // console.log(t);
 
       var position = this.path.parameters.path.getPointAt( t );
       console.log(position);
@@ -53,6 +59,8 @@ function PathCamera(camera,curve){
       // Camera Orientation 1 - default look at
       // pathCamera.lookAt( lookAt );
 
+      // console.log(this.parent.position);
+
       // Using arclength for stablization in look ahead.
       var lookAt = this.path.parameters.path.getPointAt( ( t + 30 / this.path.parameters.path.getLength() ) % 1 ).multiplyScalar( this.scale );
       // Camera Orientation 2 - up orientation via normal
@@ -62,6 +70,8 @@ function PathCamera(camera,curve){
       this.pathCamera.rotation.setFromRotationMatrix( this.pathCamera.matrix, this.pathCamera.rotation.order );
 
     };
+
+    this.update(0);
 
 };
 
