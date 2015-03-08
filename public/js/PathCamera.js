@@ -10,26 +10,13 @@ function PathCamera(camera,curve){
   var RADIUS_SEGMENTS = 1;
 
   this.normal = new THREE.Vector3( 0, 1, 0 );
-
-
   this.path = new THREE.TubeGeometry(curve, SEGMENTS, 2, RADIUS_SEGMENTS, true); //true == closed curve
-  this.startPoint = curve.points[0];
-  // this.pathMesh = new THREE.Mesh(this.path,
-  //               new THREE.LineBasicMaterial( { color : 0xff0000 } ));
   this.lookAhead = false;
-  this.scale = 0.8;
+  this.scale = 1.0;
   this.offset = 0;
   this.parent = new THREE.Object3D();
-  
-  this.parent.position.y = 1;
-  this.parent.position.x = -3;
-  // this.parent.position.z = 1.0;
   scene.add(this.parent);
-  // this.parent.add(this.pathMesh);
   this.pathCamera = camera;
-  this.pathCamera.position = this.startPoint;
-  this.pathCamera.lookAt(this.startPoint);
-  // this.pathCamera.position = this.startPoint;
   this.parent.add( this.pathCamera );
 
 
@@ -37,10 +24,8 @@ function PathCamera(camera,curve){
       // Try Animate Camera Along Spline
       var LOOP = 1000;
       var t = (step % LOOP)/LOOP;
-      // console.log(t);
 
       var position = this.path.parameters.path.getPointAt( t );
-      console.log(position);
       position.multiplyScalar( this.scale );
 
       // interpolation
@@ -71,6 +56,8 @@ function PathCamera(camera,curve){
 
     };
 
+
+    //start configuration
     this.update(0);
 
 };

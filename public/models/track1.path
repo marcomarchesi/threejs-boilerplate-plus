@@ -1,7 +1,6 @@
 var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-new THREE.Vector3(-2.47,0.0,0.0),
-new THREE.Vector3(3.12,0.0,0.0),
-new THREE.Vector3(3.11,0.0,7.4),
-new THREE.Vector3(-2.33,0.0,7.45),
-new THREE.Vector3(-2.46,0.0,-0.03),
+new THREE.Vector3(-5.95,0.46,5.78),
+new THREE.Vector3(-0.63,0.46,5.64),
+new THREE.Vector3(-0.37,0.46,-1.32),
+new THREE.Vector3(-5.81,0.46,-1.37)
 ] );
