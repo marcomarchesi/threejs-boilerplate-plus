@@ -136,8 +136,10 @@ THREE.DK2Controls = function(camera) {
   
   };
   
-  window.addEventListener( 'keydown', bind( this, this.onKeyDown ), false );
-  window.addEventListener( 'keyup', bind( this, this.onKeyUp ), false );
+
+  // Modified by MM - 'document' instead of 'window'
+  document.addEventListener( 'keydown', bind( this, this.onKeyDown ), false );
+  document.addEventListener( 'keyup', bind( this, this.onKeyUp ), false );
   
   function bind( scope, fn ) {
 

@@ -45,12 +45,12 @@ module.exports = function(grunt) {
       dev: {
         script: 'start.js'
         }
-    },
-    run: {
-    tool: {
-      cmd: 'sh ./startScript.sh',
     }
-    }
+    // run: {
+    // tool: {
+    //   cmd: 'sh ./startScript.sh',
+    // }
+    // }
   });
 
   grunt.loadNpmTasks('grunt-contrib-uglify');

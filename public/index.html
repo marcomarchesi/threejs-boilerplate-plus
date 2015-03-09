@@ -38,28 +38,27 @@
 
       var container;
 
-      var textContainer;
-
-      var scene,renderer,controls;
+      var scene,renderer,oculusRenderer,controls;
       var camera,pathCamera;
       var path;
+
       var step = 0;         // camera step
+      var side = 0;         // lateral step
+
       var scene_mesh;
       var sphere_material,sphere_geometry;
       var light;
       var ambientLightColor = SUN_LIGHT;
 
       var loader;
-      var oculusRenderer;
       var clock = new THREE.Clock();
       var delta;
 
+      // var keyboard = new KeyboardState();
 
-      var keyboard = new KeyboardState();
 
-
-      var pathEnabled = true; //true for runner camera
-      var oculusEnabled = false;
+      var pathEnabled = false; //true for runner camera
+      var oculusEnabled = true;
 
       // is it raining?
       var isRaining = false;
@@ -82,17 +81,17 @@
 
 
       //add track
-var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-new THREE.Vector3(-0.33,0.33,2.14),
-new THREE.Vector3(-0.58,0.68,-2.94),
-new THREE.Vector3(-4.7,0.53,-5.09),
-new THREE.Vector3(-8.29,0.09,-3.79),
-new THREE.Vector3(-9.33,0.69,-2.15),
-new THREE.Vector3(-8.0,0.63,1.31),
-new THREE.Vector3(-7.21,0.41,4.3),
-new THREE.Vector3(-0.01,0.13,7.23),
-new THREE.Vector3(-0.1,0.44,4.61)
-] );
+      var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
+      new THREE.Vector3(-0.33,0.33,2.14),
+      new THREE.Vector3(-0.58,0.68,-2.94),
+      new THREE.Vector3(-4.7,0.53,-5.09),
+      new THREE.Vector3(-8.29,0.09,-3.79),
+      new THREE.Vector3(-9.33,0.69,-2.15),
+      new THREE.Vector3(-8.0,0.63,1.31),
+      new THREE.Vector3(-7.21,0.41,4.3),
+      new THREE.Vector3(-0.01,0.13,7.23),
+      new THREE.Vector3(-0.1,0.44,4.61)
+      ] );
       
       pathCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
       path = new PathCamera(pathCamera,sampleClosedSpline);
@@ -102,12 +101,6 @@ new THREE.Vector3(-0.1,0.44,4.61)
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
 
-
-      //  //add the path geometry to test
-      // var curveGeometry = new THREE.TubeGeometry(sampleClosedSpline, 200, 10, 1, true); //true == closed curve
-      // var pathMesh = new THREE.Mesh(curveGeometry,
-      //           new THREE.MeshLambertMaterial( { color : 0xff0000 } ));
-      // scene.add(pathMesh);
 
       //add particle system for raining
       rain = new ParticleEngine();
@@ -121,7 +114,7 @@ new THREE.Vector3(-0.1,0.44,4.61)
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMapEnabled = true;
       //shadow antialiasing
-      renderer.shadowMapType = THREE.PCFSoftShadowMap;
+      // renderer.shadowMapType = THREE.PCFSoftShadowMap;
 
       // Here is the oculusRenderer for the Oculus Rift
         // worldScale 100 means that 100 Units == 1m
@@ -153,15 +146,13 @@ new THREE.Vector3(-0.1,0.44,4.61)
       loadScene();
 
       // position and point the default camera to the center of the scene
-      camera.position.x = -5.95;
-      camera.position.y = 1;
-      camera.position.z = 5.78;
-      // camera.position = new THREE.Vector3(-5.95,0.46,-5.78);
+      camera.position = sampleClosedSpline.points[0];
 
+      
       // Oculus DK2 controls
 
       if(oculusEnabled == true)
-      controls = new THREE.DK2Controls(pathEnabled === true? pathCamera:camera);
+        controls = new THREE.DK2Controls(pathEnabled === true? pathCamera:camera);
       else{
         controls = new THREE.FirstPersonControls( pathEnabled === true? pathCamera:camera);
         controls.movementSpeed = 2;
@@ -184,25 +175,27 @@ new THREE.Vector3(-0.1,0.44,4.61)
       function render(dt) {
 
         // var moveDistance = 5 * clock.getDelta(); 
-        keyboard.update();
+        // keyboard.update();
 
 
-        if ( keyboard.pressed("up") ){
-          path.takeStep(step,step+2, 400);
-          step += 2;
-        }
+        // if ( keyboard.pressed("up") ){
+        //   path.takeStep(step,step+2, 400);
+        //   step += 2;
+        // }
           
-        if ( keyboard.pressed("down") ){
-          if(step>0){
-            path.takeStep(step,step-2, 400);
-            step -= 2; 
-          }
-        }
+        // if ( keyboard.pressed("down") ){
+        //   if(step>0){
+        //     path.takeStep(step,step-2, 400);
+        //     step -= 2; 
+        //   }
+        // }
 
         delta = clock.getDelta();
 
         if(!pathEnabled && !oculusEnabled)
-          controls.update( delta ); 
+          controls.update( delta );
+        else if(oculusEnabled)
+          controls.update(delta);
 
         renderer.autoClear = false;
 
@@ -216,6 +209,7 @@ new THREE.Vector3(-0.1,0.44,4.61)
           oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
         else
           renderer.render(scene,pathEnabled === true? pathCamera:camera);
+
         requestAnimationFrame( render ); 
         stats.update();
         

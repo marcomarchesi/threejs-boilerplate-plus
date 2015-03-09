@@ -10,6 +10,7 @@ function PathCamera(camera,curve){
   var RADIUS_SEGMENTS = 1;
 
   this.normal = new THREE.Vector3( 0, 1, 0 );
+  this.binormal = new THREE.Vector3(0,0,0);
   this.path = new THREE.TubeGeometry(curve, SEGMENTS, 2, RADIUS_SEGMENTS, true); //true == closed curve
   this.lookAhead = false;
   this.scale = 1.0;
@@ -20,7 +21,7 @@ function PathCamera(camera,curve){
   this.parent.add( this.pathCamera );
 
 
-  this.update = function(step){
+  this.update = function(step,side){
       // Try Animate Camera Along Spline
       var LOOP = 1000;
       var t = (step % LOOP)/LOOP;
@@ -34,13 +35,20 @@ function PathCamera(camera,curve){
       var pick = Math.floor( pickt );
       var pickNext = ( pick + 1 ) % segments;
 
+
       var direction = this.path.parameters.path.getTangentAt( t );
 
       this.normal = new THREE.Vector3( 0, 1, 0 );
       // We move on a offset on its binormal
 
+      // var side = new  THREE.Vector3();
+      // side.crossVectors(direction,position);
+      // console.log(side);
+
       position.add( this.normal.clone().multiplyScalar( this.offset ) ); 
+
       this.pathCamera.position.copy( position );
+
       // Camera Orientation 1 - default look at
       // pathCamera.lookAt( lookAt );
 
@@ -51,6 +59,8 @@ function PathCamera(camera,curve){
       // Camera Orientation 2 - up orientation via normal
       if (!this.lookAhead)
         lookAt.copy( position ).add( direction );
+
+      
       this.pathCamera.matrix.lookAt(this.pathCamera.position, lookAt, this.normal);
       this.pathCamera.rotation.setFromRotationMatrix( this.pathCamera.matrix, this.pathCamera.rotation.order );
 
