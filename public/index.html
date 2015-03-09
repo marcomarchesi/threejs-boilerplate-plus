@@ -54,11 +54,11 @@
       var clock = new THREE.Clock();
       var delta;
 
-      // var keyboard = new KeyboardState();
+      var keyboard = new KeyboardState();
 
 
-      var pathEnabled = false; //true for runner camera
-      var oculusEnabled = true;
+      var pathEnabled = true; //true for runner camera
+      var oculusEnabled = false;
 
       // is it raining?
       var isRaining = false;
@@ -114,7 +114,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMapEnabled = true;
       //shadow antialiasing
-      // renderer.shadowMapType = THREE.PCFSoftShadowMap;
+      renderer.shadowMapType = THREE.PCFSoftShadowMap;
 
       // Here is the oculusRenderer for the Oculus Rift
         // worldScale 100 means that 100 Units == 1m
@@ -148,7 +148,7 @@
       // position and point the default camera to the center of the scene
       camera.position = sampleClosedSpline.points[0];
 
-      
+
       // Oculus DK2 controls
 
       if(oculusEnabled == true)
@@ -174,28 +174,27 @@
     
       function render(dt) {
 
-        // var moveDistance = 5 * clock.getDelta(); 
-        // keyboard.update();
-
-
-        // if ( keyboard.pressed("up") ){
-        //   path.takeStep(step,step+2, 400);
-        //   step += 2;
-        // }
-          
-        // if ( keyboard.pressed("down") ){
-        //   if(step>0){
-        //     path.takeStep(step,step-2, 400);
-        //     step -= 2; 
-        //   }
-        // }
-
         delta = clock.getDelta();
 
         if(!pathEnabled && !oculusEnabled)
           controls.update( delta );
         else if(oculusEnabled)
           controls.update(delta);
+        else if(pathEnabled){
+          var moveDistance = 5 * clock.getDelta(); 
+          keyboard.update();
+          if ( keyboard.pressed("up") ){
+            path.takeStep(step,step+2, 400);
+            step += 2;
+          }
+            
+          if ( keyboard.pressed("down") ){
+            if(step>0){
+              path.takeStep(step,step-2, 400);
+              step -= 2; 
+            }
+          }
+        }
 
         renderer.autoClear = false;
 
