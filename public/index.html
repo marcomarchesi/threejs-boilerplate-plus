@@ -58,6 +58,14 @@
         color: black;
     }
 
+    #map {
+      position: fixed;
+      height: 300px;
+      width: 300px;
+      bottom: 0;
+      right: 50;
+    }
+
 
     </style>
 
@@ -84,7 +92,7 @@
       var textContainer;
 
       var scene,renderer,controls;
-      var camera,pathCamera;
+      var camera, pathCamera;
       var path;
       var step = 0;         // camera step
       var scene_mesh;
@@ -126,7 +134,29 @@
       hud = document.createElement('div');
       hud.id = "hud";
       hud.className = "hud";
-      hud.innerHTML = "huuuuuuud";
+      hud.innerHTML = "huuuuuuuud";
+
+      map = document.createElement('div');
+      map.id = "map";
+      map.className = "map";
+
+      // -- table
+      /* var tbl = document.createElement('table');
+      tbl.id = "table";
+      tbl.className = 'table'
+      tbl.style.width='500px';
+      tbl.setAttribute('border','1');
+      var tbdy = document.createElement('tbody');      
+      tbl.appendChild(tbdy);
+      map.appendChild(tbl); */
+
+      var img = document.createElement("img");
+      img.setAttribute('src', 'https://www.google.it/images/srpr/logo11w.png');
+      map.appendChild(img);
+
+      // --
+
+      hud.appendChild(map);
 
       overlay = document.createElement('div');
       overlay.id = "overlay";

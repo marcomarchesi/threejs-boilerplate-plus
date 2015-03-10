@@ -31,10 +31,10 @@ function PathCamera(camera,curve){
       // Try Animate Camera Along Spline
       var LOOP = 1000;
       var t = (step % LOOP)/LOOP;
-      console.log(t);
+      //console.log(t);
 
       var position = this.path.parameters.path.getPointAt( t );
-      console.log(position);
+      //console.log(position);
       position.multiplyScalar( this.scale );
 
       // interpolation
