@@ -67,24 +67,27 @@ function PathCamera(camera,curve){
 
 PathCamera.prototype.takeStep = function(start, end, time) {
 
-        var pos = {x:start};
-        var target = {x:end};
+        if(!isOverlayVisible) {
 
-        var self = this;
+          var pos = {x:start};
+          var target = {x:end};
 
-            var tween = new TWEEN.Tween(pos )
-                    .to(target, time )
-                    .easing(TWEEN.Easing.Circular.Out)
-                    .onStart( function() {
-                      //TODO
-                    })
-                    .onUpdate( function () {
+          var self = this;
 
-                      self.update(pos.x);
-                    } )
-                    .onComplete(function() {
-                      //TODO
-                    })
-                    .start();
+              var tween = new TWEEN.Tween(pos )
+                      .to(target, time )
+                      .easing(TWEEN.Easing.Circular.Out)
+                      .onStart( function() {
+                        //TODO
+                      })
+                      .onUpdate( function () {
+
+                        self.update(pos.x);
+                      } )
+                      .onComplete(function() {
+                        //TODO
+                      })
+                      .start();
+        }
 };
 

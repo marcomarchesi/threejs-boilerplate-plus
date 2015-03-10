@@ -1,24 +1,69 @@
 <html>
   <head>
+
     <title>A Threejs Scene</title>
     <style>
-        body {
-      /* set margin to 0 and overflow to hidden, to go fullscreen */
-      margin: 0;
-      overflow: hidden;
-      /*background-color: #264A60;  /*BLUE 70*/
-      background: #cefffa;
-      background: -moz-linear-gradient(top,  #cefffa 0%, #f2b51d 89%);
-      background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#cefffa), color-stop(89%,#f2b51d));
-      background: -webkit-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
-      background: -o-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
-      background: -ms-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
-      background: linear-gradient(to bottom,  #cefffa 0%,#f2b51d 89%);
-      filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cefffa', endColorstr='#f2b51d',GradientType=0 );
+       
+      body {
+        /* set margin to 0 and overflow to hidden, to go fullscreen */
+        margin: 0;
+        overflow: hidden;
+        /*background-color: #264A60;  /*BLUE 70*/
+        background: #cefffa;
+        background: -moz-linear-gradient(top,  #cefffa 0%, #f2b51d 89%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#cefffa), color-stop(89%,#f2b51d));
+        background: -webkit-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
+        background: -o-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
+        background: -ms-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
+        background: linear-gradient(to bottom,  #cefffa 0%,#f2b51d 89%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cefffa', endColorstr='#f2b51d',GradientType=0 );
       }
+
+      .overlay {
+        text-align: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.85);
+        z-index: 9999;
+        color: white;
+    }
+ 
+    .overlay:before {
+        content: '';
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+        margin-right: -0.25em;
+    }
+
+    .overlayText {
+        display: inline-block;
+        vertical-align: middle;
+        padding: 10px 15px;
+        position: relative;
+        font-weight: bold;
+    }
+
+    .hud {
+        text-align: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+        color: black;
+    }
+
+
     </style>
+
   </head>
   <body>
+    
     <script type="text/javascript" src="js/three.min.js"></script>
     <script type="text/javascript" src="js/tween.min.js"></script>
     <script type="text/javascript" src="js/ParticleEngine.js"></script>
@@ -28,15 +73,13 @@
     <script type="text/javascript" src="js/OculusRiftEffect.js"></script>
     <script type="text/javascript" src="js/PathCamera.js"></script>
     <script type="text/javascript" src="js/DK2Controls.js"></script>
-    <script src="js/KeyboardState.js"></script>
+
     <script type="text/javascript">
 
       //Global variables
 
       var SUN_LIGHT = 0xffa573;
       var RAIN_LIGHT = 0x5596E6;
-
-      var container;
 
       var textContainer;
 
@@ -54,10 +97,6 @@
       var clock = new THREE.Clock();
       var delta;
 
-
-      var keyboard = new KeyboardState();
-
-
       var pathEnabled = true; //true for runner camera
       var oculusEnabled = false;
 
@@ -65,15 +104,83 @@
       var isRaining = false;
       var rain;
 
-
-
       var cube;
       var isTweening = false;
 
+      // body components
+      var container, content, hud, overlay;
+
+      var isOverlayVisible = true;
+
       function init() {
 
+      // creating body
+      // ---------------------------------------------
+
       container = document.createElement('div');
+      container.id = "container";
+
+      content = document.createElement('div');
+      content.id = "content";
+
+      hud = document.createElement('div');
+      hud.id = "hud";
+      hud.className = "hud";
+      hud.innerHTML = "huuuuuuud";
+
+      overlay = document.createElement('div');
+      overlay.id = "overlay";
+      overlay.className = "overlay";
+
+      overlayText = document.createElement('div');
+      overlayText.id = "overlayText";
+      overlayText.className = "overlayText";
+      overlayText.innerHTML = "<span style='font-size:40px'>Click to play</span><br />(W, A, S, D = Move, SPACE = Jump, MOUSE = Look around)";
+
+      overlay.appendChild(overlayText);
+
+      container.appendChild(content);
+      container.appendChild(hud);
+      container.appendChild(overlay);
+
       document.body.appendChild(container);
+
+      // ---------------------------------------------
+
+
+      var overlay = document.getElementById("overlay");
+      var content = document.getElementById("content");
+
+      // the overlay will fade out when clicked
+      overlay.addEventListener("click", hideOverlay);
+
+      // the overlay will fade in when 'esc' is pressed (and released)
+      window.onkeyup = function(e) {
+          var key = e.keyCode ? e.keyCode : e.which;
+
+          // 27 = esc
+          if (key == 27) {
+             showOverlay();
+          }
+      }
+
+      function hideOverlay() {
+          console.log("hide overlay");
+
+          if(isOverlayVisible) {
+              fadeOut(overlay);
+              isOverlayVisible = false;
+          }
+      }
+
+      function showOverlay() {
+          console.log("show overlay");
+
+          if(!isOverlayVisible) {
+              fadeIn(overlay);
+              isOverlayVisible = true;
+          }
+      }
 
       // create a scene, that will hold all our elements such as objects, cameras and lights.
 
@@ -161,11 +268,10 @@
       camera.position.z = 0;
 
       // Oculus DK2 controls
-
       if(oculusEnabled == true)
-      controls = new THREE.DK2Controls(pathEnabled === true? pathCamera:camera);
-      else{
-        controls = new THREE.FirstPersonControls( pathEnabled === true? pathCamera:camera);
+      controls = new THREE.DK2Controls(pathEnabled === true ? pathCamera:camera);
+      else {
+        controls = new THREE.FirstPersonControls( pathEnabled === true ? pathCamera:camera);
         controls.movementSpeed = 2;
         controls.lookSpeed = 0.02;
         controls.lookVertical = true;  
@@ -175,91 +281,117 @@
       addStats();
 
       // add the output of the renderer to the html element
-      container.appendChild(renderer.domElement);
+      content.appendChild(renderer.domElement);
 
       // call the render function, after the first render, interval is determined
       // by requestAnimationFrame
       render(0.016);
     }
 
+    function fadeOut(element) {
+        // initial opacity
+        var op = 1;
+        var timer = setInterval(function () {
+            if (op <= 0.1) {
+                // invisible
+                clearInterval(timer);
+                element.style.display = 'none';
+            }
+            element.style.opacity = op;
+            element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+            op -= op * 0.5;
+        }, 50);
+    }
+
+    function fadeIn(element) {
+        // initial opacity
+        var op = 0.1;
+        element.style.display = 'block';
+        var timer = setInterval(function () {
+            if (op >= 1) {
+                clearInterval(timer);
+            }
+            element.style.opacity = op;
+            element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+            op += op * 0.5;
+        }, 10);
+    }
+
     
-      function render(dt) {
+    function render(dt) {
 
-        // var moveDistance = 5 * clock.getDelta(); 
-        keyboard.update();
-
-
-        if ( keyboard.pressed("up") ){
-          path.takeStep(step,step+2, 400);
-          step += 2;
-        }
-          
-        if ( keyboard.pressed("down") ){
-          if(step>0){
-            path.takeStep(step,step-2, 400);
-            step -= 2; 
-          }
-        }
-
-        delta = clock.getDelta();
-
-        if(!pathEnabled && !oculusEnabled)
-          controls.update( delta ); 
-
-        renderer.autoClear = false;
-
-        TWEEN.update();
-
-        // update rain
-        rain.update(dt);
-
-        //oculus rift
-        if(oculusEnabled == true)
-          oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
-        else
-          renderer.render(scene,pathEnabled === true? pathCamera:camera);
-        requestAnimationFrame( render ); 
-        stats.update();
+      if ( controls.moveForward ) {
+        path.takeStep(step,step+2, 400);
+        step += 2;
+      }
         
+      if ( controls.moveBackward ) {
+        if(step>0){
+          path.takeStep(step,step-2, 400);
+          step -= 2; 
+        }
       }
 
-      function addStats(){
-        stats = new Stats();
-        stats.setMode(0);
-        stats.domElement.style.position = 'absolute';
-        stats.domElement.style.left = '0px';
-        stats.domElement.style.top = '0px';
-        container.appendChild(stats.domElement);
-      }
+      delta = clock.getDelta();
 
-      //load the scene
-      function loadScene(){
-          loader.load("./models/scene.js",
-          function(model,materials){
-            scene_mesh = new THREE.Mesh(model,new THREE.MeshFaceMaterial( materials ));
-            scene_mesh.name = 'scene';
-            scene_mesh.rotation.y = Math.PI;
-            scene_mesh.receiveShadow = true;
-            scene_mesh.castShadow = true;
-            scene.add(scene_mesh);
-          });
-      }
-            /**
-       * Function handles the resize event. This make sure the camera and the renderer
-       * are updated at the correct moment.
-       */
-      function handleResize() {
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-          oculusRenderer.setSize( window.innerWidth, window.innerHeight );
-          renderer.setSize(window.innerWidth, window.innerHeight);
-      }     
+      if(!pathEnabled && !oculusEnabled)
+        controls.update( delta ); 
 
-      window.onload = init;
-      // calls the handleResize function when the window is resized
-      window.addEventListener('resize', handleResize, false);
+      renderer.autoClear = false;
 
-    </script>
+      TWEEN.update();
+
+      // update rain
+      rain.update(dt);
+
+      //oculus rift
+      if(oculusEnabled == true)
+        oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
+      else
+        renderer.render(scene,pathEnabled === true? pathCamera:camera);
+      requestAnimationFrame( render ); 
+      stats.update();
+      
+    }
+
+    function addStats() {
+      stats = new Stats();
+      stats.setMode(0);
+      stats.domElement.style.position = 'absolute';
+      stats.domElement.style.left = '10px';
+      stats.domElement.style.top = '10px';
+      container.appendChild(stats.domElement);
+    }
+
+    //load the scene
+    function loadScene() {
+        loader.load("./models/scene.js",
+        function(model,materials){
+          scene_mesh = new THREE.Mesh(model,new THREE.MeshFaceMaterial( materials ));
+          scene_mesh.name = 'scene';
+          scene_mesh.rotation.y = Math.PI;
+          scene_mesh.receiveShadow = true;
+          scene_mesh.castShadow = true;
+          scene.add(scene_mesh);
+        });
+    }
+          /**
+     * Function handles the resize event. This make sure the camera and the renderer
+     * are updated at the correct moment.
+     */
+    function handleResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        oculusRenderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }     
+
+    window.onload = init;
+    // calls the handleResize function when the window is resized
+    window.addEventListener('resize', handleResize, false);
+
+  </script>
+
   </body>
 </html>
 
