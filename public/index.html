@@ -44,7 +44,8 @@
         vertical-align: middle;
         padding: 10px 15px;
         position: relative;
-        font-weight: bold;
+        /*font-weight: bold; */
+        font-family: arial
     }
 
     .hud {
@@ -58,14 +59,13 @@
         color: black;
     }
 
-    #map {
+    .map {
       position: fixed;
       height: 300px;
       width: 300px;
       bottom: 0;
       right: 50;
     }
-
 
     </style>
 
@@ -81,6 +81,7 @@
     <script type="text/javascript" src="js/OculusRiftEffect.js"></script>
     <script type="text/javascript" src="js/PathCamera.js"></script>
     <script type="text/javascript" src="js/DK2Controls.js"></script>
+    <script type="text/javascript" src="js/dat.gui.min.js"></script>
 
     <script type="text/javascript">
 
@@ -120,6 +121,8 @@
 
       var isOverlayVisible = true;
 
+      var controlGUI;
+
       function init() {
 
       // creating body
@@ -151,7 +154,9 @@
       map.appendChild(tbl); */
 
       var img = document.createElement("img");
-      img.setAttribute('src', 'https://www.google.it/images/srpr/logo11w.png');
+      img.setAttribute('src', 'textures/map_sample.PNG');
+      img.style.maxHeight = "100%";
+      img.style.maxWidth = "100%";
       map.appendChild(img);
 
       // --
@@ -165,12 +170,12 @@
       overlayText = document.createElement('div');
       overlayText.id = "overlayText";
       overlayText.className = "overlayText";
-      overlayText.innerHTML = "<span style='font-size:40px'>Click to play</span><br />(W, A, S, D = Move, SPACE = Jump, MOUSE = Look around)";
+      overlayText.innerHTML = "<span style='font-size:40px'>Click to play</span><br />(W, A, S, D = Move, SPACE = Jump, MOUSE = Look around) <br />SHIFT to switch camera";
 
       overlay.appendChild(overlayText);
 
-      container.appendChild(content);
       container.appendChild(hud);
+      container.appendChild(content);
       container.appendChild(overlay);
 
       document.body.appendChild(container);
@@ -192,6 +197,11 @@
           if (key == 27) {
              showOverlay();
           }
+
+          // 16 = shift
+          if (key == 16) {
+            switchCamera();
+          }
       }
 
       function hideOverlay() {
@@ -212,6 +222,17 @@
           }
       }
 
+      function switchCamera() {
+        console.log("switch camera");
+
+        if(pathEnabled)
+          pathEnabled = false;
+        else
+          pathEnabled = true;
+
+        setControls();
+      }
+
       // create a scene, that will hold all our elements such as objects, cameras and lights.
 
       /*************************
@@ -229,7 +250,7 @@
       ] );
       
       pathCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
-      path = new PathCamera(pathCamera,sampleClosedSpline);
+      path = new PathCamera(pathCamera, sampleClosedSpline);
       // var curveGeometry = new THREE.TubeGeometry(sampleClosedSpline, 200, 1, 1, true); //true == closed curve
       // var pathMesh = new THREE.Mesh(curveGeometry,
       //           new THREE.LineBasicMaterial( { color : 0xff0000 } ));
@@ -257,7 +278,7 @@
 
 
       // create a render, sets the background color and the size
-      renderer = new THREE.WebGLRenderer({antialias:true,alpha: true});
+      renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
       renderer.setClearColor( 0xa7fae6, 1 );
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMapEnabled = true;
@@ -297,6 +318,33 @@
       camera.position.y = 1;
       camera.position.z = 0;
 
+      // controls
+      setControls();
+
+      // add fps stats
+      addStats();
+
+      // setup the control object for the control gui
+      controlGUI = new function() {
+          this.oculusEnabled = false;
+      };
+      addControlGui(controlGUI);
+
+      // add the output of the renderer to the html element
+      content.appendChild(renderer.domElement);
+
+      // call the render function, after the first render, interval is determined
+      // by requestAnimationFrame
+      render(0.016);
+    }
+
+    function addControlGui(controlObject) {
+        var gui = new dat.GUI();
+        gui.add(controlObject, 'oculusEnabled', false);
+    }
+
+    function setControls() {
+
       // Oculus DK2 controls
       if(oculusEnabled == true)
       controls = new THREE.DK2Controls(pathEnabled === true ? pathCamera:camera);
@@ -307,15 +355,6 @@
         controls.lookVertical = true;  
       }
 
-      // // add fps stats
-      addStats();
-
-      // add the output of the renderer to the html element
-      content.appendChild(renderer.domElement);
-
-      // call the render function, after the first render, interval is determined
-      // by requestAnimationFrame
-      render(0.016);
     }
 
     function fadeOut(element) {
@@ -364,7 +403,7 @@
 
       delta = clock.getDelta();
 
-      if(!pathEnabled && !oculusEnabled)
+      if(!pathEnabled && !controlGUI.oculusEnabled)
         controls.update( delta ); 
 
       renderer.autoClear = false;
@@ -375,7 +414,7 @@
       rain.update(dt);
 
       //oculus rift
-      if(oculusEnabled == true)
+      if(controlGUI.oculusEnabled == true)
         oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
       else
         renderer.render(scene,pathEnabled === true? pathCamera:camera);
