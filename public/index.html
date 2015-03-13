@@ -108,8 +108,7 @@
       var clock = new THREE.Clock();
       var delta;
 
-      var pathEnabled = true; //true for runner camera
-      var oculusEnabled = false;
+      var pathEnabled = false; //true for runner camera;
 
       // is it raining?
       var isRaining = false;
@@ -126,6 +125,12 @@
       var controlGUI;
 
       function init() {
+
+      // setup the control object for the control gui
+      controlGUI = new function() {
+          this.oculusEnabled = false;
+      };
+      addControlGui(controlGUI);
 
       // creating body
       // ---------------------------------------------
@@ -262,6 +267,24 @@
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
 
+
+      // ---- hud test 
+
+
+      var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
+      var cubeMaterial = new THREE.MeshLambertMaterial({ color: "red" });
+      cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+      //cube.scale.set(window.innerWidth / 4, window.innerHeight / 4, 1);
+      cube.position.z = -2;
+      
+      camera.add(cube);
+
+      scene.add(camera);
+
+
+      // ----
+
+
       var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
        var cubeMaterial = new THREE.MeshLambertMaterial({
          color: "red"
@@ -326,12 +349,6 @@
       // add fps stats
       addStats();
 
-      // setup the control object for the control gui
-      controlGUI = new function() {
-          this.oculusEnabled = false;
-      };
-      addControlGui(controlGUI);
-
       // add the output of the renderer to the html element
       content.appendChild(renderer.domElement);
 
@@ -348,7 +365,7 @@
     function setControls() {
 
       // Oculus DK2 controls
-      if(oculusEnabled == true)
+      if(controlGUI.oculusEnabled == true)
       controls = new THREE.DK2Controls(pathEnabled === true ? pathCamera:camera);
       else {
         controls = new THREE.FirstPersonControls( pathEnabled === true ? pathCamera:camera);
@@ -405,7 +422,7 @@
 
       delta = clock.getDelta();
 
-      if(!pathEnabled && !controlGUI.oculusEnabled)
+      //if(!pathEnabled && !controlGUI.oculusEnabled)
         controls.update( delta ); 
 
       renderer.autoClear = false;
