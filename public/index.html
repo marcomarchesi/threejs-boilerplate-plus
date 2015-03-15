@@ -120,9 +120,11 @@
       // body components
       var container, content, hud, overlay;
 
-      var isOverlayVisible = true;
+      var isOverlayVisible = false;
 
       var controlGUI;
+
+      var HUDscene, HUDcamera;
 
       function init() {
 
@@ -141,6 +143,7 @@
       content = document.createElement('div');
       content.id = "content";
 
+      /*
       hud = document.createElement('div');
       hud.id = "hud";
       hud.className = "hud";
@@ -150,25 +153,14 @@
       map.id = "map";
       map.className = "map";
 
-      // -- table
-      /* var tbl = document.createElement('table');
-      tbl.id = "table";
-      tbl.className = 'table'
-      tbl.style.width='500px';
-      tbl.setAttribute('border','1');
-      var tbdy = document.createElement('tbody');      
-      tbl.appendChild(tbdy);
-      map.appendChild(tbl); */
-
       var img = document.createElement("img");
       img.setAttribute('src', 'textures/map_sample.PNG');
       img.style.maxHeight = "100%";
       img.style.maxWidth = "100%";
       map.appendChild(img);
 
-      // --
-
       hud.appendChild(map);
+      */
 
       overlay = document.createElement('div');
       overlay.id = "overlay";
@@ -180,8 +172,8 @@
       overlayText.innerHTML = "<span style='font-size:40px'>Click to play</span><br />(W, A, S, D = Move, SPACE = Jump, MOUSE = Look around) <br />SHIFT to switch camera";
 
       overlay.appendChild(overlayText);
-
-      container.appendChild(hud);
+      
+      //container.appendChild(hud);
       container.appendChild(content);
       container.appendChild(overlay);
 
@@ -190,11 +182,11 @@
       // ---------------------------------------------
 
 
-      var overlay = document.getElementById("overlay");
+      //var overlay = document.getElementById("overlay");
       var content = document.getElementById("content");
 
       // the overlay will fade out when clicked
-      overlay.addEventListener("click", hideOverlay);
+      //overlay.addEventListener("click", hideOverlay);
 
       // the overlay will fade in when 'esc' is pressed (and released)
       window.onkeyup = function(e) {
@@ -270,25 +262,37 @@
 
       // ---- hud test 
 
+      HUDscene = new THREE.Scene();
+      HUDcamera = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, -10000, 10000);
 
-      var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
-      var cubeMaterial = new THREE.MeshLambertMaterial({ color: "red" });
-      cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-      //cube.scale.set(window.innerWidth / 4, window.innerHeight / 4, 1);
-      cube.position.z = -2;
+      /*
       
-      camera.add(cube);
+      var texture = THREE.ImageUtils.loadTexture("textures/sample_texture.png");
 
-      scene.add(camera);
+      var material = new THREE.SpriteMaterial( { map: texture } );
+      //var width = material.map.image.width;
+      //var height = material.map.image.height;
+        
+      var sprite = new THREE.Sprite( material );
+      //sprite.scale.set( width, height, 1 );      
+      HUDscene.add( sprite );
+
+      */
+
+      var materialColor = new THREE.MeshBasicMaterial({ color: "red" });
+      var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materialColor);
+      bgPlane.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
+      HUDscene.add(bgPlane);
+      
 
 
       // ----
 
 
       var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
-       var cubeMaterial = new THREE.MeshLambertMaterial({
+      var cubeMaterial = new THREE.MeshLambertMaterial({
          color: "red"
-       });
+         });
        cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
        cube.castShadow = true;
        cube.position.z = -5;
@@ -300,7 +304,6 @@
       rain = new ParticleEngine();
       if(isRaining)
         rain.start();
-
 
       // create a render, sets the background color and the size
       renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
@@ -348,6 +351,9 @@
 
       // add fps stats
       addStats();
+
+      renderer.autoClear = false;
+      oculusRenderer.autoClear = false;
 
       // add the output of the renderer to the html element
       content.appendChild(renderer.domElement);
@@ -437,6 +443,16 @@
         oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
       else
         renderer.render(scene,pathEnabled === true? pathCamera:camera);
+
+
+      renderer.clear();      
+      renderer.render(scene, camera);
+      renderer.render(HUDscene, HUDcamera);
+
+      // render using requestAnimationFrame
+      requestAnimationFrame(render);
+
+
       requestAnimationFrame( render ); 
       stats.update();
       

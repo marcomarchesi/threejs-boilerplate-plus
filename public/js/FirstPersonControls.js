@@ -123,7 +123,7 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	this.onMouseMove = function ( event ) {
 
 		if(!isOverlayVisible) {
-
+			
 			if ( this.domElement === document ) {
 
 				this.mouseX = event.pageX - this.viewHalfX;
