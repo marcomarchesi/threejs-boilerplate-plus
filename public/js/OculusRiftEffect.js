@@ -42,6 +42,14 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 	pCamera.matrixAutoUpdate = false;
 	pCamera.target = new THREE.Vector3();
 
+	// --- hud
+
+	var oCameraHUD = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, -10000, 10000);
+	oCameraHUD.matrixAutoUpdate = false;
+	oCameraHUD.target = new THREE.Vector3();
+
+	// ---
+
 	// Orthographic camera
 	var oCamera = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000 );
 	oCamera.position.z = 1;
@@ -154,7 +162,7 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 		RTMaterial.uniforms[ "texid" ].value = renderTarget;
 
 	}
-	this.getHMD = function() {return HMD};
+	this.getHMD = function() { return HMD };
 
 	this.setHMD(HMD);
 
@@ -165,7 +173,7 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 		renderer.setSize( width, height );
 	};
 
-	this.render = function ( scene, camera ) {
+	this.render = function (scene, camera) {
 		var cc = renderer.getClearColor().clone();
 
 		// Clear
@@ -187,8 +195,9 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 		renderer.setViewport(left.viewport[0], left.viewport[1], left.viewport[2], left.viewport[3]);
 
 		RTMaterial.uniforms['lensCenter'].value = left.lensCenter;
-		renderer.render( scene, pCamera, renderTarget, true );
 
+		renderer.render( scene, pCamera, renderTarget, true );
+		renderer.render( HUDscene, oCameraHUD, renderTarget, false);
 		renderer.render( finalScene, oCamera );
 
 		// Render right
@@ -204,6 +213,7 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 		RTMaterial.uniforms['lensCenter'].value = right.lensCenter;
 
 		renderer.render( scene, pCamera, renderTarget, true );
+		renderer.render( HUDscene, oCameraHUD, renderTarget, false);
 		renderer.render( finalScene, oCamera );
 
 	};

@@ -19,56 +19,6 @@
         filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cefffa', endColorstr='#f2b51d',GradientType=0 );
       }
 
-      .overlay {
-        text-align: center;
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.85);
-        z-index: 9999;
-        color: white;
-    }
- 
-    .overlay:before {
-        content: '';
-        display: inline-block;
-        height: 100%;
-        vertical-align: middle;
-        margin-right: -0.25em;
-    }
-
-    .overlayText {
-        display: inline-block;
-        vertical-align: middle;
-        padding: 10px 15px;
-        position: relative;
-        /*font-weight: bold; */
-        font-family: arial
-    }
-
-    .hud {
-        text-align: center;
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 9999;
-        color: black;
-
-        pointer-events: none;
-    }
-
-    .map {
-      position: fixed;
-      height: 300px;
-      width: 300px;
-      bottom: 0;
-      right: 50;
-    }
-
     </style>
 
   </head>
@@ -104,7 +54,7 @@
       var ambientLightColor = SUN_LIGHT;
 
       var loader;
-      var oculusRenderer;
+      var oculusRenderer, oculusRendererHUD;
       var clock = new THREE.Clock();
       var delta;
 
@@ -118,7 +68,7 @@
       var isTweening = false;
 
       // body components
-      var container, content, hud, overlay;
+      var container, content;
 
       var isOverlayVisible = false;
 
@@ -142,51 +92,15 @@
 
       content = document.createElement('div');
       content.id = "content";
-
-      /*
-      hud = document.createElement('div');
-      hud.id = "hud";
-      hud.className = "hud";
-      hud.innerHTML = "huuuuuuuud";
-
-      map = document.createElement('div');
-      map.id = "map";
-      map.className = "map";
-
-      var img = document.createElement("img");
-      img.setAttribute('src', 'textures/map_sample.PNG');
-      img.style.maxHeight = "100%";
-      img.style.maxWidth = "100%";
-      map.appendChild(img);
-
-      hud.appendChild(map);
-      */
-
-      overlay = document.createElement('div');
-      overlay.id = "overlay";
-      overlay.className = "overlay";
-
-      overlayText = document.createElement('div');
-      overlayText.id = "overlayText";
-      overlayText.className = "overlayText";
-      overlayText.innerHTML = "<span style='font-size:40px'>Click to play</span><br />(W, A, S, D = Move, SPACE = Jump, MOUSE = Look around) <br />SHIFT to switch camera";
-
-      overlay.appendChild(overlayText);
       
-      //container.appendChild(hud);
       container.appendChild(content);
-      container.appendChild(overlay);
 
       document.body.appendChild(container);
 
       // ---------------------------------------------
 
 
-      //var overlay = document.getElementById("overlay");
       var content = document.getElementById("content");
-
-      // the overlay will fade out when clicked
-      //overlay.addEventListener("click", hideOverlay);
 
       // the overlay will fade in when 'esc' is pressed (and released)
       window.onkeyup = function(e) {
@@ -194,30 +108,12 @@
 
           // 27 = esc
           if (key == 27) {
-             showOverlay();
+             //showOverlay();
           }
 
           // 16 = shift
           if (key == 16) {
             switchCamera();
-          }
-      }
-
-      function hideOverlay() {
-          console.log("hide overlay");
-
-          if(isOverlayVisible) {
-              fadeOut(overlay);
-              isOverlayVisible = false;
-          }
-      }
-
-      function showOverlay() {
-          console.log("show overlay");
-
-          if(!isOverlayVisible) {
-              fadeIn(overlay);
-              isOverlayVisible = true;
           }
       }
 
@@ -239,6 +135,12 @@
       *************************/
       scene = new THREE.Scene();
 
+      // create a render, sets the background color and the size
+      renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+      renderer.setClearColor( 0xa7fae6, 1 );
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMapEnabled = true;
+
 
       //add track
       var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
@@ -250,11 +152,6 @@
       
       pathCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
       path = new PathCamera(pathCamera, sampleClosedSpline);
-      // var curveGeometry = new THREE.TubeGeometry(sampleClosedSpline, 200, 1, 1, true); //true == closed curve
-      // var pathMesh = new THREE.Mesh(curveGeometry,
-      //           new THREE.LineBasicMaterial( { color : 0xff0000 } ));
-      // scene.add(pathMesh);
-
 
       // create a camera, which defines where we're looking at.
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
@@ -282,9 +179,14 @@
       var materialColor = new THREE.MeshBasicMaterial({ color: "red" });
       var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materialColor);
       bgPlane.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
+      //bgPlane.position.z = -1;
       HUDscene.add(bgPlane);
-      
 
+
+      // Here is the oculusRenderer for the Oculus Rift
+        // worldScale 100 means that 100 Units == 1m
+      oculusRendererHUD = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
+      oculusRendererHUD.setSize( window.innerWidth, window.innerHeight );
 
       // ----
 
@@ -304,12 +206,6 @@
       rain = new ParticleEngine();
       if(isRaining)
         rain.start();
-
-      // create a render, sets the background color and the size
-      renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
-      renderer.setClearColor( 0xa7fae6, 1 );
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.shadowMapEnabled = true;
 
       // Here is the oculusRenderer for the Oculus Rift
         // worldScale 100 means that 100 Units == 1m
@@ -352,14 +248,13 @@
       // add fps stats
       addStats();
 
-      renderer.autoClear = false;
-      oculusRenderer.autoClear = false;
+      //renderer.autoClear = false;
+      //oculusRenderer.autoClear = false;
 
       // add the output of the renderer to the html element
       content.appendChild(renderer.domElement);
 
-      // call the render function, after the first render, interval is determined
-      // by requestAnimationFrame
+      // call the render function, after the first render, interval is determined by requestAnimationFrame
       render(0.016);
     }
 
@@ -372,7 +267,7 @@
 
       // Oculus DK2 controls
       if(controlGUI.oculusEnabled == true)
-      controls = new THREE.DK2Controls(pathEnabled === true ? pathCamera:camera);
+        controls = new THREE.DK2Controls(pathEnabled === true ? pathCamera : camera);
       else {
         controls = new THREE.FirstPersonControls( pathEnabled === true ? pathCamera:camera);
         controls.movementSpeed = 2;
@@ -381,36 +276,6 @@
       }
 
     }
-
-    function fadeOut(element) {
-        // initial opacity
-        var op = 1;
-        var timer = setInterval(function () {
-            if (op <= 0.1) {
-                // invisible
-                clearInterval(timer);
-                element.style.display = 'none';
-            }
-            element.style.opacity = op;
-            element.style.filter = 'alpha(opacity=' + op * 100 + ")";
-            op -= op * 0.5;
-        }, 50);
-    }
-
-    function fadeIn(element) {
-        // initial opacity
-        var op = 0.1;
-        element.style.display = 'block';
-        var timer = setInterval(function () {
-            if (op >= 1) {
-                clearInterval(timer);
-            }
-            element.style.opacity = op;
-            element.style.filter = 'alpha(opacity=' + op * 100 + ")";
-            op += op * 0.5;
-        }, 10);
-    }
-
     
     function render(dt) {
 
@@ -420,7 +285,7 @@
       }
         
       if ( controls.moveBackward ) {
-        if(step>0){
+        if(step>0) {
           path.takeStep(step,step-2, 400);
           step -= 2; 
         }
@@ -439,19 +304,23 @@
       rain.update(dt);
 
       //oculus rift
-      if(controlGUI.oculusEnabled == true)
-        oculusRenderer.render( scene, pathEnabled === true? pathCamera:camera);
-      else
-        renderer.render(scene,pathEnabled === true? pathCamera:camera);
+      if(controlGUI.oculusEnabled == true) {
+        oculusRenderer.render( scene, pathEnabled === true ? pathCamera : camera);
+        //oculusRenderer.render( HUDscene, HUDcamera);
+        //oculusRendererHUD.render( HUDscene, HUDcamera);
+      }
+      else {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        renderer.clear();
+        renderer.render(scene, pathEnabled === true ? pathCamera : camera);
+        renderer.render(HUDscene, HUDcamera);
+      }
 
 
-      renderer.clear();      
-      renderer.render(scene, camera);
-      renderer.render(HUDscene, HUDcamera);
-
-      // render using requestAnimationFrame
-      requestAnimationFrame(render);
-
+      //renderer.clear();      
+      //renderer.render(scene, camera);
+      //renderer.render(HUDscene, HUDcamera);
 
       requestAnimationFrame( render ); 
       stats.update();
@@ -479,7 +348,8 @@
           scene.add(scene_mesh);
         });
     }
-          /**
+    
+    /**
      * Function handles the resize event. This make sure the camera and the renderer
      * are updated at the correct moment.
      */
