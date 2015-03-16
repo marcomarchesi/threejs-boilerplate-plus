@@ -42,13 +42,10 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 	pCamera.matrixAutoUpdate = false;
 	pCamera.target = new THREE.Vector3();
 
-	// --- hud
-
-	var oCameraHUD = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, -10000, 10000);
+	// HUD camera
+	var oCameraHUD = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, 0.01, 10);
 	oCameraHUD.matrixAutoUpdate = false;
 	oCameraHUD.target = new THREE.Vector3();
-
-	// ---
 
 	// Orthographic camera
 	var oCamera = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000 );
@@ -173,7 +170,7 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 		renderer.setSize( width, height );
 	};
 
-	this.render = function (scene, camera) {
+	this.render = function (scene, camera, HUDscene) {
 		var cc = renderer.getClearColor().clone();
 
 		// Clear
@@ -185,7 +182,7 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 		if (camera.matrixAutoUpdate) camera.updateMatrix();
 
 		// Render left
-		this.preLeftRender();
+		//this.preLeftRender();
 
 		pCamera.projectionMatrix.copy(left.proj);
 
@@ -196,12 +193,13 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 
 		RTMaterial.uniforms['lensCenter'].value = left.lensCenter;
 
+		// those render methods will draw on the Render Target
 		renderer.render( scene, pCamera, renderTarget, true );
 		renderer.render( HUDscene, oCameraHUD, renderTarget, false);
 		renderer.render( finalScene, oCamera );
 
 		// Render right
-		this.preRightRender();
+		//this.preRightRender();
 
 		pCamera.projectionMatrix.copy(right.proj);
 
@@ -212,10 +210,10 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 
 		RTMaterial.uniforms['lensCenter'].value = right.lensCenter;
 
+		// those render methods will draw on the Render Target
 		renderer.render( scene, pCamera, renderTarget, true );
 		renderer.render( HUDscene, oCameraHUD, renderTarget, false);
 		renderer.render( finalScene, oCamera );
-
 	};
 
 	this.dispose = function() {

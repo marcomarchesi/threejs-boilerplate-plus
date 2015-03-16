@@ -30,7 +30,7 @@
     <script type="text/javascript" src="js/stats.min.js"></script>
     <script type="text/javascript" src="js/FirstPersonControls.js"></script>
     <script type="text/javascript" src="js/JSONLoader.js"></script>
-    <script type="text/javascript" src="js/OculusRiftEffect.js"></script>
+    <script type="text/javascript" src="js/OculusRiftEffect_HUD.js"></script>
     <script type="text/javascript" src="js/PathCamera.js"></script>
     <script type="text/javascript" src="js/DK2Controls.js"></script>
     <script type="text/javascript" src="js/dat.gui.min.js"></script>
@@ -80,7 +80,7 @@
 
       // setup the control object for the control gui
       controlGUI = new function() {
-          this.oculusEnabled = false;
+          this.oculusEnabled = true;
       };
       addControlGui(controlGUI);
 
@@ -99,10 +99,7 @@
 
       // ---------------------------------------------
 
-
-      var content = document.getElementById("content");
-
-      // the overlay will fade in when 'esc' is pressed (and released)
+      // the overlay will fade in when 'esc' is released)
       window.onkeyup = function(e) {
           var key = e.keyCode ? e.keyCode : e.which;
 
@@ -130,9 +127,6 @@
 
       // create a scene, that will hold all our elements such as objects, cameras and lights.
 
-      /*************************
-                SCENE
-      *************************/
       scene = new THREE.Scene();
 
       // create a render, sets the background color and the size
@@ -141,7 +135,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMapEnabled = true;
 
-
       //add track
       var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
         new THREE.Vector3(2,0,-2),
@@ -149,60 +142,41 @@
         new THREE.Vector3(-2,0,2),
         new THREE.Vector3(-2,0,-2),
       ] );
-      
-      pathCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
-      path = new PathCamera(pathCamera, sampleClosedSpline);
 
       // create a camera, which defines where we're looking at.
+      pathCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
 
+      path = new PathCamera(pathCamera, sampleClosedSpline);
 
-      // ---- hud test 
-
+      // hud
       HUDscene = new THREE.Scene();
-      HUDcamera = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, -10000, 10000);
+      HUDcamera = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, 0.01, 10000);
 
-      /*
-      
-      var texture = THREE.ImageUtils.loadTexture("textures/sample_texture.png");
+      var texture = THREE.ImageUtils.loadTexture("textures/ui.png");
 
-      var material = new THREE.SpriteMaterial( { map: texture } );
-      //var width = material.map.image.width;
-      //var height = material.map.image.height;
-        
-      var sprite = new THREE.Sprite( material );
-      //sprite.scale.set( width, height, 1 );      
-      HUDscene.add( sprite );
+      var materialColor = new THREE.MeshBasicMaterial({  map: texture });
+      materialColor.transparent = true
+      materialColor.opacity = 1;
 
-      */
-
-      var materialColor = new THREE.MeshBasicMaterial({ color: "red" });
       var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materialColor);
       bgPlane.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
-      //bgPlane.position.z = -1;
+      bgPlane.position.z = -0.01;
+      bgPlane.position.x = 1000;
       HUDscene.add(bgPlane);
-
-
-      // Here is the oculusRenderer for the Oculus Rift
-        // worldScale 100 means that 100 Units == 1m
-      oculusRendererHUD = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
-      oculusRendererHUD.setSize( window.innerWidth, window.innerHeight );
-
-      // ----
-
 
       var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
       var cubeMaterial = new THREE.MeshLambertMaterial({
          color: "red"
          });
-       cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-       cube.castShadow = true;
-       cube.position.z = -5;
-       cube.position.y = 1;
-       cube.position.x = 3;
-       scene.add(cube);
+      cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+      cube.castShadow = true;
+      cube.position.z = -5;
+      cube.position.y = 1;
+      cube.position.x = 3;
+      scene.add(cube);
 
-      //add particle system for raining
+      // add particle system for raining
       rain = new ParticleEngine();
       if(isRaining)
         rain.start();
@@ -214,7 +188,7 @@
 
       //Create a light
       light = new THREE.SpotLight(0xffa573);
-      light.position.set(0,10,50);
+      light.position.set(0, 10, 50);
       light.shadowCameraNear = 50;
       light.shadowMapWidth = 1024;
       light.shadowMapHeight = 1024;
@@ -264,36 +238,33 @@
     }
 
     function setControls() {
-
       // Oculus DK2 controls
       if(controlGUI.oculusEnabled == true)
         controls = new THREE.DK2Controls(pathEnabled === true ? pathCamera : camera);
       else {
-        controls = new THREE.FirstPersonControls( pathEnabled === true ? pathCamera:camera);
+        controls = new THREE.FirstPersonControls( pathEnabled === true ? pathCamera : camera);
         controls.movementSpeed = 2;
         controls.lookSpeed = 0.02;
         controls.lookVertical = true;  
       }
-
     }
     
     function render(dt) {
-
       if ( controls.moveForward ) {
-        path.takeStep(step,step+2, 400);
+        path.takeStep(step, step+2, 400);
         step += 2;
       }
         
       if ( controls.moveBackward ) {
-        if(step>0) {
-          path.takeStep(step,step-2, 400);
+        if(step > 0) {
+          path.takeStep(step, step-2, 400);
           step -= 2; 
         }
       }
 
       delta = clock.getDelta();
 
-      //if(!pathEnabled && !controlGUI.oculusEnabled)
+      //if(pathEnabled == false)
         controls.update( delta ); 
 
       renderer.autoClear = false;
@@ -305,22 +276,15 @@
 
       //oculus rift
       if(controlGUI.oculusEnabled == true) {
-        oculusRenderer.render( scene, pathEnabled === true ? pathCamera : camera);
-        //oculusRenderer.render( HUDscene, HUDcamera);
-        //oculusRendererHUD.render( HUDscene, HUDcamera);
+        oculusRenderer.render( scene, pathEnabled === true ? pathCamera : camera, HUDscene);
       }
       else {
         renderer.setSize(window.innerWidth, window.innerHeight);
 
         renderer.clear();
-        renderer.render(scene, pathEnabled === true ? pathCamera : camera);
+        renderer.render(scene, (pathEnabled === true ? pathCamera : camera));
         renderer.render(HUDscene, HUDcamera);
       }
-
-
-      //renderer.clear();      
-      //renderer.render(scene, camera);
-      //renderer.render(HUDscene, HUDcamera);
 
       requestAnimationFrame( render ); 
       stats.update();

@@ -20,6 +20,11 @@ THREE.DK2Controls = function(camera) {
   this.ws;
   this.sensorData;
   this.lastId = -1;
+
+  this.moveForward = false;
+  this.moveBackward = false;
+  this.moveLeft = false;
+  this.moveRight = false;
   
   this.controller = new THREE.Object3D();
   
@@ -59,9 +64,11 @@ THREE.DK2Controls = function(camera) {
     switch (event.keyCode) {
       case 87: //W
         this.wasd.up = true;
+        this.moveForward = true;
         break;
       case 83: //S
         this.wasd.down = true;
+        this.moveBackward = true;
         break;
       case 68: //D
         this.wasd.right = true;
@@ -76,9 +83,11 @@ THREE.DK2Controls = function(camera) {
     switch (event.keyCode) {
       case 87: //W
         this.wasd.up = false;
+        this.moveForward = false;
         break;
       case 83: //S
         this.wasd.down = false;
+        this.moveBackward = false;
         break;
       case 68: //D
         this.wasd.right = false;
@@ -95,14 +104,13 @@ THREE.DK2Controls = function(camera) {
     if (this.sensorData) {
       var id = this.sensorData[0];
       if (id > this.lastId) {
-        this.headPos.set(this.sensorData[1]*10,this.sensorData[2]*10,this.sensorData[3]*10);
-        this.headQuat.set(this.sensorData[4],this.sensorData[5],this.sensorData[6],this.sensorData[7]);
+        this.headPos.set(this.sensorData[1]*10, this.sensorData[2]*10, this.sensorData[3]*10);
+        this.headQuat.set(this.sensorData[4], this.sensorData[5], this.sensorData[6], this.sensorData[7]);
           
         this.camera.setRotationFromQuaternion(this.headQuat);
-        this.controller.setRotationFromMatrix(this.camera.matrix);
-        
-        
+        this.controller.setRotationFromMatrix(this.camera.matrix);        
       }
+
       this.lastId = id;
     }
       
@@ -112,7 +120,7 @@ THREE.DK2Controls = function(camera) {
 
     if (this.wasd.down) {
       this.controller.translateZ(this.translationSpeed * delta);
-    }
+    }   
 
     if (this.wasd.right) {
       this.controller.translateX(this.translationSpeed * delta);
@@ -122,18 +130,20 @@ THREE.DK2Controls = function(camera) {
       this.controller.translateX(-this.translationSpeed * delta);
     }
     
-    this.camera.position.addVectors(this.controller.position, this.headPos);
-    
-    if (this.camera.position.y < -10) {
-      this.camera.position.y = -10;
-    }
+    if(!pathEnabled)
+    {
+      this.camera.position.addVectors(this.controller.position, this.headPos);
 
-    if (ws) {
-      if (ws.readyState === 1) {
-        ws.send("get\n");
+      if (this.camera.position.y < -10) {
+        this.camera.position.y = -10;
       }
-    }
-  
+
+      if (ws) {
+        if (ws.readyState === 1) {
+          ws.send("get\n");
+        }
+      }
+    }  
   };
   
   window.addEventListener( 'keydown', bind( this, this.onKeyDown ), false );

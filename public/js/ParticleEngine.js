@@ -26,7 +26,7 @@ function ParticleEngine(){
 
     this.color = 0xaaaaaa;
     this.size  = Math.random()*0.05;
-    var img = THREE.ImageUtils.loadTexture('/textures/rain.png');
+    var img = THREE.ImageUtils.loadTexture('textures/rain.png');
     
 
     // var textureImage = new Image();

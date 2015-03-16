@@ -121,8 +121,6 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	// };
 
 	this.onMouseMove = function ( event ) {
-
-		if(!isOverlayVisible) {
 			
 			if ( this.domElement === document ) {
 
@@ -135,13 +133,10 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 				this.mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
 
 			}
-		}
 
 	};
 
 	this.onKeyDown = function ( event ) {
-
-		if(!isOverlayVisible) {
 
 			switch ( event.keyCode ) {
 
@@ -161,13 +156,9 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 				case 70: /*F*/ this.moveDown = true; break;
 
 			}
-
-		}
 	};
 
 	this.onKeyUp = function ( event ) {
-
-		if(!isOverlayVisible) {
 
 			switch( event.keyCode ) {
 
@@ -187,13 +178,10 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 				case 70: /*F*/ this.moveDown = false; break;
 
 			}
-		}
 
 	};
 
 	this.update = function( delta ) {
-
-		if(!isOverlayVisible) {
 
 			if ( this.enabled === false ) return;
 
@@ -251,17 +239,16 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 			}
 
-			var targetPosition = this.target,
-				position = this.object.position;
+			if(!pathEnabled) {
+				var targetPosition = this.target,
+					position = this.object.position;
 
-			targetPosition.x = position.x + 100 * Math.sin( this.phi ) * Math.cos( this.theta );
-			targetPosition.y = position.y + 100 * Math.cos( this.phi );
-			targetPosition.z = position.z + 100 * Math.sin( this.phi ) * Math.sin( this.theta );
+				targetPosition.x = position.x + 100 * Math.sin( this.phi ) * Math.cos( this.theta );
+				targetPosition.y = position.y + 100 * Math.cos( this.phi );
+				targetPosition.z = position.z + 100 * Math.sin( this.phi ) * Math.sin( this.theta );
 
-			this.object.lookAt( targetPosition );
-
-		}
-
+				this.object.lookAt( targetPosition );
+			}
 	};
 
 
