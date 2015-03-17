@@ -22,7 +22,7 @@
     </style>
 
   </head>
-  
+
   <body>
     
     <script type="text/javascript" src="js/three.min.js"></script>
@@ -54,6 +54,10 @@
 
       var path;
       var step = 0;         // camera step
+
+      // hud elments
+      var HUDisVisible = true;
+      var HUDElementMaterialColor;
 
       var scene_mesh;
       var light;
@@ -98,6 +102,7 @@
       // setup the control object for the control gui
       controlGUI = new function() {
           this.oculusEnabled = true;
+          this.HUDenabled = HUDisVisible;
       };
       addControlGui(controlGUI);
 
@@ -143,10 +148,10 @@
 
       //add track
       var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-        new THREE.Vector3(2,0,-2),
-        new THREE.Vector3(2,0,2),
-        new THREE.Vector3(-2,0,2),
-        new THREE.Vector3(-2,0,-2),
+        new THREE.Vector3(2, 0, -2),
+        new THREE.Vector3(2, 0, 2),
+        new THREE.Vector3(-2, 0, 2),
+        new THREE.Vector3(-2, 0, -2),
       ] );
 
       // create cameras.
@@ -170,10 +175,10 @@
       // load a sample texture
       var texture = THREE.ImageUtils.loadTexture("textures/ui.png");
 
-      var materialColor = new THREE.MeshBasicMaterial({  map: texture });
-      materialColor.transparent = true
-      materialColor.opacity = 1;
-      var hudElement = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materialColor);
+      HUDElementMaterialColor = new THREE.MeshBasicMaterial({  map: texture });
+      HUDElementMaterialColor.transparent = true
+      HUDElementMaterialColor.opacity = 1;
+      var hudElement = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDElementMaterialColor);
       hudElement.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
       hudElement.position.z = -0.01;
       hudElement.position.x = 1000;
@@ -239,6 +244,7 @@
     function addControlGui(controlObject) {
         var gui = new dat.GUI();
         gui.add(controlObject, 'oculusEnabled', false);
+        gui.add(controlObject, 'HUDenabled', true);
     }
 
     function setControls() {
@@ -279,6 +285,9 @@
       // update rain
       rain.update(dt);
 
+      // show/hide hud
+      updateHUDVisibility();
+
       // update
       renderer.autoClear = false;
       if(controlGUI.oculusEnabled == true) {
@@ -296,6 +305,30 @@
       requestAnimationFrame( render ); 
       stats.update();
       
+    }
+
+    function updateHUDVisibility() {
+      // HUD fade out
+      if(controlGUI.HUDenabled == false && HUDisVisible) {
+        if(HUDElementMaterialColor.opacity != 0)
+          HUDElementMaterialColor.opacity = HUDElementMaterialColor.opacity - 0.1;
+
+        if(HUDElementMaterialColor.opacity < 0.1) {
+          HUDisVisible = false;
+          HUDElementMaterialColor.opacity = 0;
+        }
+
+      }
+      // HUD fade in
+      else if (controlGUI.HUDenabled == true && !HUDisVisible) {
+        if(HUDElementMaterialColor.opacity != 1)
+          HUDElementMaterialColor.opacity = HUDElementMaterialColor.opacity + 0.1;
+
+        if(HUDElementMaterialColor.opacity > 0.9) {
+          HUDisVisible = true;
+          HUDElementMaterialColor.opacity = 1;
+        }
+      }
     }
 
     function addStats() {
