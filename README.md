@@ -17,7 +17,7 @@ Install
  2) Run:
   `grunt`
  
- 3) Open Google Chrome (preferred for Presentation Mode) at `localhost:8080`
+ 3) Open Google Chrome (preferred for Presentation Mode) at `localhost:8888`
 
 
 
