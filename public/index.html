@@ -58,6 +58,7 @@
       // hud elments
       var HUDisVisible = true;
       var HUDElementMaterialColor;
+      var pointerMesh;
 
       var scene_mesh;
       var light;
@@ -198,19 +199,19 @@
       hudElement.position.z = -0.01;
       hudElement.position.x = 1000;
       hudElement.position.y = 500;
-      //HUDscene.add(hudElement);
+      HUDscene.add(hudElement);
 
-      var texturePath = THREE.ImageUtils.loadTexture("textures/star.png");
+      var texturePath = THREE.ImageUtils.loadTexture("textures/pointer.png");
 
-      var HUDPathMaterialColor = new THREE.MeshBasicMaterial({  map: texturePath });
-      HUDPathMaterialColor.transparent = true
-      HUDPathMaterialColor.opacity = 1;
-      var hudElement = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDPathMaterialColor);
-      hudElement.scale.set(500, 500, 1);
-      hudElement.position.z = -0.01;
-      hudElement.position.x = 1000;
-      hudElement.position.y = 500;
-      //HUDscene.add(hudElement);
+      var HUDPointerMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
+      HUDPointerMaterial.transparent = true
+      HUDPointerMaterial.opacity = 1;
+      pointerMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDPointerMaterial);
+      pointerMesh.scale.set(20, 20, 1);
+      pointerMesh.position.z = -0.01;
+      pointerMesh.position.x = 1000;
+      pointerMesh.position.y = 500;
+      HUDscene.add(pointerMesh);
 
       var pauseTexture = THREE.ImageUtils.loadTexture("textures/texture.png");
       //pauseTexture.repeat.x = 0;
@@ -344,6 +345,9 @@
       // show/hide hud
       updateHUDVisibility();
 
+      // update pointer on map
+      updatePointer();
+
       // update
       renderer.autoClear = false;
       if(controlGUI.oculusEnabled == true) {
@@ -361,6 +365,35 @@
       requestAnimationFrame( render ); 
       stats.update();
       
+    }
+
+    var prevX = -10000, prevY = -10000;
+
+    function updatePointer() {
+      //pointerMesh;
+      console.log("camera: " +pathCamera.position.x);
+      console.log("pointer: " +pointerMesh.position.x);
+      // 500 x 500
+      // camera.position : 10 000 = x : 500
+
+      var moving = false;
+      if(prevX != pathCamera.position.x || prevY != pathCamera.position.z) {
+        prevX = pathCamera.position.x;
+        prevY = pathCamera.position.z;
+        moving = true;
+      }
+
+      if(moving) {
+        var x = (pathCamera.position.x * 500) / 1000;
+        var y = (pathCamera.position.z * 500) / 1000;
+
+        pointerMesh.position.x = pointerMesh.position.x +x;
+        pointerMesh.position.y = pointerMesh.position.y +y;
+
+        pointerMesh.updateMatrix();
+        pointerMesh.updateMatrixWorld();
+      }
+
     }
 
     function updateHUDVisibility() {
@@ -428,7 +461,3 @@
 
   </body>
 </html>
-
-
-
-
