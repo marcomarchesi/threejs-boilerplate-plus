@@ -12,6 +12,8 @@ Copyright 2014 Lars Ivar Hatledal
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+   @modified by Pierfrancesco Soffritti
 */
 
 THREE.DK2Controls = function(camera) {
@@ -25,6 +27,8 @@ THREE.DK2Controls = function(camera) {
   this.moveBackward = false;
   this.moveLeft = false;
   this.moveRight = false;
+  this.moveUp = false;
+  this.moveDown = false;
   
   this.controller = new THREE.Object3D();
   
@@ -62,39 +66,65 @@ THREE.DK2Controls = function(camera) {
   
   this.onKeyDown = function (event) {
     switch (event.keyCode) {
-      case 87: //W
+      
+      case 87: /*W*/
         this.wasd.up = true;
         this.moveForward = true;
         break;
-      case 83: //S
+
+      case 83: /*S*/
         this.wasd.down = true;
         this.moveBackward = true;
         break;
-      case 68: //D
+
+      case 68: /*D*/
         this.wasd.right = true;
         break;
-      case 65: //A
-        this.wasd.left = true;
-        break;
+
+      case 65: /*A*/
+          this.wasd.left = true;
+          break;
+
+      case 82: /*R*/
+          this.moveUp = true; 
+          break;
+
+      case 70: /*F*/
+          this.moveDown = true;
+          break;
+
     }
   };
   
+  // moveForward and moveBackward are used to move the pathCamera (see render method in index)
   this.onKeyUp = function (event) {
     switch (event.keyCode) {
-      case 87: //W
+
+      case 87: /*W*/
         this.wasd.up = false;
         this.moveForward = false;
         break;
-      case 83: //S
+
+      case 83: /*S*/
         this.wasd.down = false;
         this.moveBackward = false;
         break;
-      case 68: //D
+
+      case 68: /*D*/
         this.wasd.right = false;
         break;
-      case 65: //A
-        this.wasd.left = false;
-        break;
+
+      case 65: /*A*/
+          this.wasd.left = false;
+          break;
+
+      case 82: /*R*/
+          this.moveUp = false; 
+          break;
+
+      case 70: /*F*/
+          this.moveDown = false;
+          break;
     }
   };
 
@@ -114,27 +144,30 @@ THREE.DK2Controls = function(camera) {
       this.lastId = id;
     }
       
-    if (this.wasd.up) {
+    // update position
+    if (this.wasd.up)
       this.controller.translateZ(-this.translationSpeed * delta);
-    }
 
-    if (this.wasd.down) {
+    if (this.wasd.down)
       this.controller.translateZ(this.translationSpeed * delta);
-    }   
 
-    if (this.wasd.right) {
+    if (this.wasd.right)
       this.controller.translateX(this.translationSpeed * delta);
-    }
 
-    if (this.wasd.left) {
+    if (this.wasd.left)
       this.controller.translateX(-this.translationSpeed * delta);
-    }
-    
-    if(!pathEnabled)
-    {
-      this.camera.position.addVectors(this.controller.position, this.headPos);
 
-      if (this.camera.position.y < -10) {
+    if (  this.moveUp)
+      this.controller.translateY( this.translationSpeed * delta );
+    if (this.moveDown)
+      this.controller.translateY( - this.translationSpeed * delta );
+    
+    // update the position of the camera ONLY if pathEnabled == false. Otherwise the camare will follow the path.
+    if(!pathEnabled) {
+      this.camera.position.addVectors(this.controller.position, this.headPos);
+    }
+
+    if (this.camera.position.y < -10) {
         this.camera.position.y = -10;
       }
 
@@ -142,8 +175,7 @@ THREE.DK2Controls = function(camera) {
         if (ws.readyState === 1) {
           ws.send("get\n");
         }
-      }
-    }  
+      } 
   };
   
   window.addEventListener( 'keydown', bind( this, this.onKeyDown ), false );
@@ -160,26 +192,3 @@ THREE.DK2Controls = function(camera) {
   };
   
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

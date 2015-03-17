@@ -1,6 +1,5 @@
 <html>
   <head>
-
     <title>A Threejs Scene</title>
     <style>
        
@@ -8,7 +7,7 @@
         /* set margin to 0 and overflow to hidden, to go fullscreen */
         margin: 0;
         overflow: hidden;
-        /*background-color: #264A60;  /*BLUE 70*/
+
         background: #cefffa;
         background: -moz-linear-gradient(top,  #cefffa 0%, #f2b51d 89%);
         background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#cefffa), color-stop(89%,#f2b51d));
@@ -16,12 +15,14 @@
         background: -o-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
         background: -ms-linear-gradient(top,  #cefffa 0%,#f2b51d 89%);
         background: linear-gradient(to bottom,  #cefffa 0%,#f2b51d 89%);
+
         filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cefffa', endColorstr='#f2b51d',GradientType=0 );
       }
 
     </style>
 
   </head>
+  
   <body>
     
     <script type="text/javascript" src="js/three.min.js"></script>
@@ -37,28 +38,33 @@
 
     <script type="text/javascript">
 
-      //Global variables
+      //Global variables.
+
+      // body components
+      var container, content;
 
       var SUN_LIGHT = 0xffa573;
       var RAIN_LIGHT = 0x5596E6;
 
       var textContainer;
 
-      var scene,renderer,controls;
+      var scene, renderer, controls;
       var camera, pathCamera;
+      var HUDscene, HUDcamera;
+
       var path;
       var step = 0;         // camera step
+
       var scene_mesh;
-      var sphere_material,sphere_geometry;
       var light;
       var ambientLightColor = SUN_LIGHT;
 
       var loader;
-      var oculusRenderer, oculusRendererHUD;
+      var oculusRenderer;
       var clock = new THREE.Clock();
       var delta;
 
-      var pathEnabled = false; //true for runner camera;
+      var pathEnabled = false; // set to true for runner camera; can be changed at runtime pressing shift
 
       // is it raining?
       var isRaining = false;
@@ -67,22 +73,12 @@
       var cube;
       var isTweening = false;
 
-      // body components
-      var container, content;
-
+      // todo
       var isOverlayVisible = false;
 
       var controlGUI;
 
-      var HUDscene, HUDcamera;
-
       function init() {
-
-      // setup the control object for the control gui
-      controlGUI = new function() {
-          this.oculusEnabled = true;
-      };
-      addControlGui(controlGUI);
 
       // creating body
       // ---------------------------------------------
@@ -99,7 +95,13 @@
 
       // ---------------------------------------------
 
-      // the overlay will fade in when 'esc' is released)
+      // setup the control object for the control gui
+      controlGUI = new function() {
+          this.oculusEnabled = true;
+      };
+      addControlGui(controlGUI);
+
+      // the overlay will fade in when 'esc' is released
       window.onkeyup = function(e) {
           var key = e.keyCode ? e.keyCode : e.which;
 
@@ -126,7 +128,6 @@
       }
 
       // create a scene, that will hold all our elements such as objects, cameras and lights.
-
       scene = new THREE.Scene();
 
       // create a render, sets the background color and the size
@@ -134,6 +135,11 @@
       renderer.setClearColor( 0xa7fae6, 1 );
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.shadowMapEnabled = true;
+
+      // Here is the oculusRenderer for the Oculus Rift
+        // worldScale 100 means that 100 Units == 1m
+      oculusRenderer = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
+      oculusRenderer.setSize( window.innerWidth, window.innerHeight );
 
       //add track
       var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
@@ -143,28 +149,39 @@
         new THREE.Vector3(-2,0,-2),
       ] );
 
-      // create a camera, which defines where we're looking at.
+      // create cameras.
+      // PathCamera will follow the defined path and be controlled by PathCamera.js
+      // camera is the normal camera and  will be controlled by FirstPersonControls.js/DK2Controls.js
       pathCamera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 1000 );
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
 
       path = new PathCamera(pathCamera, sampleClosedSpline);
 
-      // hud
+      // position and point the default camera to the center of the scene
+      camera.position.x = 0;
+      camera.position.y = 1;
+      camera.position.z = 0;
+
+      // --- hud
+      // create a scene that will hold all hud elements and an ortho camera to always show them on top of the game scene
       HUDscene = new THREE.Scene();
       HUDcamera = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, 0.01, 10000);
 
+      // load a sample texture
       var texture = THREE.ImageUtils.loadTexture("textures/ui.png");
 
       var materialColor = new THREE.MeshBasicMaterial({  map: texture });
       materialColor.transparent = true
       materialColor.opacity = 1;
+      var hudElement = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materialColor);
+      hudElement.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
+      hudElement.position.z = -0.01;
+      hudElement.position.x = 1000;
+      HUDscene.add(hudElement);
 
-      var bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), materialColor);
-      bgPlane.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
-      bgPlane.position.z = -0.01;
-      bgPlane.position.x = 1000;
-      HUDscene.add(bgPlane);
+      // ---
 
+      // add a random cube to the scene
       var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
       var cubeMaterial = new THREE.MeshLambertMaterial({
          color: "red"
@@ -176,17 +193,12 @@
       cube.position.x = 3;
       scene.add(cube);
 
-      // add particle system for raining
+      // add particle system for raining to the scene
       rain = new ParticleEngine();
       if(isRaining)
         rain.start();
 
-      // Here is the oculusRenderer for the Oculus Rift
-        // worldScale 100 means that 100 Units == 1m
-      oculusRenderer = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
-      oculusRenderer.setSize( window.innerWidth, window.innerHeight );
-
-      //Create a light
+      // lights
       light = new THREE.SpotLight(0xffa573);
       light.position.set(0, 10, 50);
       light.shadowCameraNear = 50;
@@ -196,34 +208,26 @@
       light.castShadow = true;
       scene.add(light);
 
-      // add fog
-      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.1);
+      var ambientLight = new THREE.AmbientLight( ambientLightColor );
+      scene.add(ambientLight );
 
+      // if is raining change light color
       if(isRaining)
         ambientLightColor = RAIN_LIGHT;
       else
         ambientLightColor = SUN_LIGHT;
 
-      var ambientLight = new THREE.AmbientLight( ambientLightColor );
-      scene.add(ambientLight );
+      // add fog
+      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.1);
 
       // load scene model
       loader = new THREE.JSONLoader();
       loadScene();
 
-      // position and point the default camera to the center of the scene
-      camera.position.x = 0;
-      camera.position.y = 1;
-      camera.position.z = 0;
-
-      // controls
+      // debug controls
       setControls();
-
       // add fps stats
       addStats();
-
-      //renderer.autoClear = false;
-      //oculusRenderer.autoClear = false;
 
       // add the output of the renderer to the html element
       content.appendChild(renderer.domElement);
@@ -250,35 +254,38 @@
     }
     
     function render(dt) {
+
+      // updating the position and orientation of the camera
       if ( controls.moveForward ) {
-        path.takeStep(step, step+2, 400);
+        path.takeStep(step, step+2, 400, controlGUI.oculusEnabled);
         step += 2;
       }
         
       if ( controls.moveBackward ) {
         if(step > 0) {
-          path.takeStep(step, step-2, 400);
+          path.takeStep(step, step-2, 400, controlGUI.oculusEnabled);
           step -= 2; 
         }
       }
 
       delta = clock.getDelta();
 
-      //if(pathEnabled == false)
-        controls.update( delta ); 
+      controls.update(delta);
+      // ---
 
-      renderer.autoClear = false;
-
+      // used in PathCamera
       TWEEN.update();
 
       // update rain
       rain.update(dt);
 
-      //oculus rift
+      // update
+      renderer.autoClear = false;
       if(controlGUI.oculusEnabled == true) {
         oculusRenderer.render( scene, pathEnabled === true ? pathCamera : camera, HUDscene);
       }
       else {
+        // if we just switched to the normal renderer from the oculusRenderer, we have to reset render area size
         renderer.setSize(window.innerWidth, window.innerHeight);
 
         renderer.clear();

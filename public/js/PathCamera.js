@@ -4,7 +4,7 @@
 *
 */
 
-function PathCamera(camera,curve){
+function PathCamera(camera,curve) {
 
   var SEGMENTS = 200;
   var RADIUS_SEGMENTS = 1;
@@ -27,7 +27,7 @@ function PathCamera(camera,curve){
   this.pathCamera.position = this.startPoint;
   this.parent.add( this.pathCamera );
 
-  this.update = function(step){
+  this.update = function(step, oculusEnabled) {
       // Try Animate Camera Along Spline
       var LOOP = 1000;
       var t = (step % LOOP)/LOOP;
@@ -58,14 +58,18 @@ function PathCamera(camera,curve){
       // Camera Orientation 2 - up orientation via normal
       if (!this.lookAhead)
         lookAt.copy( position ).add( direction );
-      this.pathCamera.matrix.lookAt(this.pathCamera.position, lookAt, this.normal);
-      this.pathCamera.rotation.setFromRotationMatrix( this.pathCamera.matrix, this.pathCamera.rotation.order );
+
+      // if oculusEnabled we don't have to do that beacuse the oculus controls (DK2Controls) will the the camere where to look at.
+      if(!oculusEnabled) {
+        this.pathCamera.matrix.lookAt(this.pathCamera.position, lookAt, this.normal);
+        this.pathCamera.rotation.setFromRotationMatrix( this.pathCamera.matrix, this.pathCamera.rotation.order );
+      }
 
     };
 
 };
 
-PathCamera.prototype.takeStep = function(start, end, time) {
+PathCamera.prototype.takeStep = function(start, end, time, oculusEnabled) {
 
         if(!isOverlayVisible) {
 
@@ -82,7 +86,7 @@ PathCamera.prototype.takeStep = function(start, end, time) {
                       })
                       .onUpdate( function () {
 
-                        self.update(pos.x);
+                        self.update(pos.x, oculusEnabled);
                       } )
                       .onComplete(function() {
                         //TODO
@@ -90,4 +94,3 @@ PathCamera.prototype.takeStep = function(start, end, time) {
                       .start();
         }
 };
-
