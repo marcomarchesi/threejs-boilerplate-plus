@@ -45,6 +45,11 @@ module.exports = function(grunt) {
       dev: {
         script: 'start.js'
         }
+    },
+    run: {
+    tool: {
+      cmd: 'sh ./startScript.sh',
+    }
     }
   });
 
@@ -54,6 +59,7 @@ module.exports = function(grunt) {
   //grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-run');
 
   //grunt.registerTask('test', ['jshint']);
 

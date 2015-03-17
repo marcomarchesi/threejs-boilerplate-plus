@@ -4,17 +4,16 @@
 *
 */
 
-function PathCamera(camera,curve){
+function PathCamera(camera,curve) {
 
   var SEGMENTS = 200;
   var RADIUS_SEGMENTS = 1;
-
-  this.isTweening = false;
 
   this.normal = new THREE.Vector3( 0, 1, 0 );
 
 
   this.path = new THREE.TubeGeometry(curve, SEGMENTS, 2, RADIUS_SEGMENTS, true); //true == closed curve
+  this.startPoint = curve.points[0];
   this.pathMesh = new THREE.Mesh(this.path,
                 new THREE.LineBasicMaterial( { color : 0xff0000 } ));
   this.lookAhead = false;
@@ -25,15 +24,17 @@ function PathCamera(camera,curve){
   scene.add(this.parent);
   this.parent.add(this.pathMesh);
   this.pathCamera = camera;
+  this.pathCamera.position = this.startPoint;
   this.parent.add( this.pathCamera );
 
-  this.update = function(step){
+  this.update = function(step, oculusEnabled) {
       // Try Animate Camera Along Spline
       var LOOP = 1000;
       var t = (step % LOOP)/LOOP;
-      // console.log(t);
+      //console.log(t);
 
       var position = this.path.parameters.path.getPointAt( t );
+      //console.log(position);
       position.multiplyScalar( this.scale );
 
       // interpolation
@@ -57,36 +58,39 @@ function PathCamera(camera,curve){
       // Camera Orientation 2 - up orientation via normal
       if (!this.lookAhead)
         lookAt.copy( position ).add( direction );
-      this.pathCamera.matrix.lookAt(this.pathCamera.position, lookAt, this.normal);
-      this.pathCamera.rotation.setFromRotationMatrix( this.pathCamera.matrix, this.pathCamera.rotation.order );
+
+      // if oculusEnabled we don't have to do that beacuse the oculus controls (DK2Controls) will the the camere where to look at.
+      if(!oculusEnabled) {
+        this.pathCamera.matrix.lookAt(this.pathCamera.position, lookAt, this.normal);
+        this.pathCamera.rotation.setFromRotationMatrix( this.pathCamera.matrix, this.pathCamera.rotation.order );
+      }
 
     };
 
 };
 
-PathCamera.prototype.takeStep = function(start, end, time) {
+PathCamera.prototype.takeStep = function(start, end, time, oculusEnabled) {
 
-        var pos = {x:start};
-        var target = {x:end};
+        if(!isOverlayVisible) {
 
-        var self = this;
+          var pos = {x:start};
+          var target = {x:end};
 
-        // if (!self.isTweening) {
-            var tween = new TWEEN.Tween(pos )
-                    .to(target, time )
-                    .easing(TWEEN.Easing.Circular.Out)
-                    .onStart( function() {
-                        self.isTweening = true;
-                    })
-                    .onUpdate( function () {
+          var self = this;
 
-                      self.update(pos.x);
-                    } )
-                    .onComplete(function() {
+              var tween = new TWEEN.Tween(pos )
+                      .to(target, time )
+                      .easing(TWEEN.Easing.Circular.Out)
+                      .onStart( function() {
+                        //TODO
+                      })
+                      .onUpdate( function () {
 
-                        self.isTweening = false;
-                    })
-                    .start();
-        // }
+                        self.update(pos.x, oculusEnabled);
+                      } )
+                      .onComplete(function() {
+                        //TODO
+                      })
+                      .start();
+        }
 };
-

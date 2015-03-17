@@ -2,6 +2,8 @@
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
  * @author paulirish / http://paulirish.com/
+
+ * @modified by Pierfrancesco Soffritti
  */
 
 THREE.FirstPersonControls = function ( object, domElement ) {
@@ -121,136 +123,130 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	// };
 
 	this.onMouseMove = function ( event ) {
+			
+			if ( this.domElement === document ) {
 
-		if ( this.domElement === document ) {
+				this.mouseX = event.pageX - this.viewHalfX;
+				this.mouseY = event.pageY - this.viewHalfY;
 
-			this.mouseX = event.pageX - this.viewHalfX;
-			this.mouseY = event.pageY - this.viewHalfY;
+			} else {
 
-		} else {
+				this.mouseX = event.pageX - this.domElement.offsetLeft - this.viewHalfX;
+				this.mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
 
-			this.mouseX = event.pageX - this.domElement.offsetLeft - this.viewHalfX;
-			this.mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
-
-		}
+			}
 
 	};
 
 	this.onKeyDown = function ( event ) {
 
-		//event.preventDefault();
+			switch ( event.keyCode ) {
 
-		switch ( event.keyCode ) {
+				case 87: /*W*/ this.moveForward = true; break;
 
-			case 38: /*up*/
-			case 87: /*W*/ this.moveForward = true; break;
+				case 65: /*A*/ this.moveLeft = true; break;
 
-			case 37: /*left*/
-			case 65: /*A*/ this.moveLeft = true; break;
+				case 83: /*S*/ this.moveBackward = true; break;
 
-			case 40: /*down*/
-			case 83: /*S*/ this.moveBackward = true; break;
+				case 68: /*D*/ this.moveRight = true; break;
 
-			case 39: /*right*/
-			case 68: /*D*/ this.moveRight = true; break;
+				case 82: /*R*/ this.moveUp = true; break;
+				case 70: /*F*/ this.moveDown = true; break;
 
-			case 82: /*R*/ this.moveUp = true; break;
-			case 70: /*F*/ this.moveDown = true; break;
-
-		}
-
+			}
 	};
 
 	this.onKeyUp = function ( event ) {
 
-		switch( event.keyCode ) {
+			switch( event.keyCode ) {
 
-			case 38: /*up*/
-			case 87: /*W*/ this.moveForward = false; break;
+				case 38: /*up*/
+				case 87: /*W*/ this.moveForward = false; break;
 
-			case 37: /*left*/
-			case 65: /*A*/ this.moveLeft = false; break;
+				case 37: /*left*/
+				case 65: /*A*/ this.moveLeft = false; break;
 
-			case 40: /*down*/
-			case 83: /*S*/ this.moveBackward = false; break;
+				case 40: /*down*/
+				case 83: /*S*/ this.moveBackward = false; break;
 
-			case 39: /*right*/
-			case 68: /*D*/ this.moveRight = false; break;
+				case 39: /*right*/
+				case 68: /*D*/ this.moveRight = false; break;
 
-			case 82: /*R*/ this.moveUp = false; break;
-			case 70: /*F*/ this.moveDown = false; break;
+				case 82: /*R*/ this.moveUp = false; break;
+				case 70: /*F*/ this.moveDown = false; break;
 
-		}
+			}
 
 	};
 
 	this.update = function( delta ) {
 
-		if ( this.enabled === false ) return;
+			if ( this.enabled === false ) return;
 
-		if ( this.heightSpeed ) {
+			if ( this.heightSpeed ) {
 
-			var y = THREE.Math.clamp( this.object.position.y, this.heightMin, this.heightMax );
-			var heightDelta = y - this.heightMin;
+				var y = THREE.Math.clamp( this.object.position.y, this.heightMin, this.heightMax );
+				var heightDelta = y - this.heightMin;
 
-			this.autoSpeedFactor = delta * ( heightDelta * this.heightCoef );
+				this.autoSpeedFactor = delta * ( heightDelta * this.heightCoef );
 
-		} else {
+			} else {
 
-			this.autoSpeedFactor = 0.0;
+				this.autoSpeedFactor = 0.0;
 
-		}
+			}
 
-		var actualMoveSpeed = delta * this.movementSpeed;
+			var actualMoveSpeed = delta * this.movementSpeed;
 
-		if ( this.moveForward || ( this.autoForward && !this.moveBackward ) ) this.object.translateZ( - ( actualMoveSpeed + this.autoSpeedFactor ) );
-		if ( this.moveBackward ) this.object.translateZ( actualMoveSpeed );
+			if ( this.moveForward || ( this.autoForward && !this.moveBackward ) ) this.object.translateZ( - ( actualMoveSpeed + this.autoSpeedFactor ) );
+			if ( this.moveBackward ) this.object.translateZ( actualMoveSpeed );
 
-		if ( this.moveLeft ) this.object.translateX( - actualMoveSpeed );
-		if ( this.moveRight ) this.object.translateX( actualMoveSpeed );
+			if ( this.moveLeft ) this.object.translateX( - actualMoveSpeed );
+			if ( this.moveRight ) this.object.translateX( actualMoveSpeed );
 
-		if ( this.moveUp ) this.object.translateY( actualMoveSpeed );
-		if ( this.moveDown ) this.object.translateY( - actualMoveSpeed );
+			if ( this.moveUp ) this.object.translateY( actualMoveSpeed );
+			if ( this.moveDown ) this.object.translateY( - actualMoveSpeed );
 
-		var actualLookSpeed = delta * this.lookSpeed;
+			var actualLookSpeed = delta * this.lookSpeed;
 
-		if ( !this.activeLook ) {
+			if ( !this.activeLook ) {
 
-			actualLookSpeed = 0;
+				actualLookSpeed = 0;
 
-		}
+			}
 
-		var verticalLookRatio = 1;
+			var verticalLookRatio = 1;
 
-		if ( this.constrainVertical ) {
+			if ( this.constrainVertical ) {
 
-			verticalLookRatio = Math.PI / ( this.verticalMax - this.verticalMin );
+				verticalLookRatio = Math.PI / ( this.verticalMax - this.verticalMin );
 
-		}
+			}
 
-		this.lon += this.mouseX * actualLookSpeed;
-		if( this.lookVertical ) this.lat -= this.mouseY * actualLookSpeed * verticalLookRatio;
+			this.lon += this.mouseX * actualLookSpeed;
+			if( this.lookVertical ) this.lat -= this.mouseY * actualLookSpeed * verticalLookRatio;
 
-		this.lat = Math.max( - 85, Math.min( 85, this.lat ) );
-		this.phi = THREE.Math.degToRad( 90 - this.lat );
+			this.lat = Math.max( - 85, Math.min( 85, this.lat ) );
+			this.phi = THREE.Math.degToRad( 90 - this.lat );
 
-		this.theta = THREE.Math.degToRad( this.lon );
+			this.theta = THREE.Math.degToRad( this.lon );
 
-		if ( this.constrainVertical ) {
+			if ( this.constrainVertical ) {
 
-			this.phi = THREE.Math.mapLinear( this.phi, 0, Math.PI, this.verticalMin, this.verticalMax );
+				this.phi = THREE.Math.mapLinear( this.phi, 0, Math.PI, this.verticalMin, this.verticalMax );
 
-		}
+			}
 
-		var targetPosition = this.target,
-			position = this.object.position;
+			if(!pathEnabled) {
+				var targetPosition = this.target,
+					position = this.object.position;
 
-		targetPosition.x = position.x + 100 * Math.sin( this.phi ) * Math.cos( this.theta );
-		targetPosition.y = position.y + 100 * Math.cos( this.phi );
-		targetPosition.z = position.z + 100 * Math.sin( this.phi ) * Math.sin( this.theta );
+				targetPosition.x = position.x + 100 * Math.sin( this.phi ) * Math.cos( this.theta );
+				targetPosition.y = position.y + 100 * Math.cos( this.phi );
+				targetPosition.z = position.z + 100 * Math.sin( this.phi ) * Math.sin( this.theta );
 
-		this.object.lookAt( targetPosition );
-
+				this.object.lookAt( targetPosition );
+			}
 	};
 
 
