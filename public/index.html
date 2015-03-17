@@ -33,6 +33,9 @@
 
       //Global variables
 
+      // WebSocket
+      var ws = null;
+
       var SUN_LIGHT = 0xffa573;
       var RAIN_LIGHT = 0x5596E6;
 
@@ -68,6 +71,37 @@
       var isTweening = false;
 
       function init() {
+
+
+        /* add websocket */
+          // ...it does, let's connect to localhost default port.
+          // Make sure Quartz Composer composition is running with
+          // the WebSocket Patch set to port 60001. 
+          var  ws = new WebSocket('ws://localhost:8888');
+
+          // Invoked when there was an error with the connection. 
+          ws.onerror = function(e) {
+            console.log('error', e);
+          }
+
+          // Invoked when the socket has been opened successfully.
+          ws.onopen = function(e) {
+            console.log('open', e);
+            ws.send("Hello Server");
+          }
+
+          // Callback invoked when incoming messages arrive. Event `data` attribute
+          // holds the string passed. WebSocket in current spec supports utf8 text-based
+          // communication only. Binary data  is base64 encoded.
+          ws.onmessage = function(e) {
+            var json = JSON.parse(e.data);
+            console.log('message', json);
+          }
+
+          // Invoked when the socket has been closed
+          ws.onclose = function(e) {
+            console.log('close', e);
+          }
 
       container = document.createElement('div');
       document.body.appendChild(container);
@@ -131,7 +165,7 @@
       scene.add(light);
 
       // add fog
-      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.1);
+      scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.002);
 
       if(isRaining)
         ambientLightColor = RAIN_LIGHT;
@@ -176,9 +210,9 @@
 
         delta = clock.getDelta();
 
-        if(!pathEnabled && !oculusEnabled)
-          controls.update( delta );
-        else if(oculusEnabled)
+        // if(!pathEnabled && !oculusEnabled)
+        //   controls.update( delta );
+        if(oculusEnabled == true)
           controls.update(delta);
         else if(pathEnabled){
           var moveDistance = 5 * clock.getDelta(); 
@@ -225,7 +259,7 @@
 
       //load the scene
       function loadScene(){
-          loader.load("./models/scene2.js",
+          loader.load("./models/scene.js",
           function(model,materials){
             scene_mesh = new THREE.Mesh(model,new THREE.MeshFaceMaterial( materials ));
             scene_mesh.name = 'scene';
