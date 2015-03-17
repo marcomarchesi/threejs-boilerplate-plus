@@ -35,10 +35,12 @@
     <script type="text/javascript" src="js/PathCamera.js"></script>
     <script type="text/javascript" src="js/DK2Controls.js"></script>
     <script type="text/javascript" src="js/dat.gui.min.js"></script>
-
+    <script src="js/socket.io.js"></script>
     <script type="text/javascript">
 
       //Global variables.
+
+      var socket = io.connect('http://localhost:8888');
 
       // body components
       var container, content;
@@ -79,6 +81,12 @@
       var controlGUI;
 
       function init() {
+
+
+      /* web socket */
+      socket.on('message',function(data){
+        console.log('message received is ' + data);
+      });
 
       // creating body
       // ---------------------------------------------
