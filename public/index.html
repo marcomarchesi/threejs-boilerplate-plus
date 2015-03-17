@@ -77,8 +77,9 @@
       var cube;
       var isTweening = false;
 
-      // todo
-      var isOverlayVisible = false;
+      // game state
+      var HUDPauseMaterial;
+      var pause = true;
 
       var controlGUI;
 
@@ -101,7 +102,7 @@
 
       // setup the control object for the control gui
       controlGUI = new function() {
-          this.oculusEnabled = true;
+          this.oculusEnabled = false;
           this.HUDenabled = HUDisVisible;
       };
       addControlGui(controlGUI);
@@ -112,7 +113,10 @@
 
           // 27 = esc
           if (key == 27) {
-             //showOverlay();
+            if(pause) 
+              pause = false;
+            else
+              pause = true;
           }
 
           // 16 = shift
@@ -183,6 +187,42 @@
       hudElement.position.z = -0.01;
       hudElement.position.x = 1000;
       HUDscene.add(hudElement);
+
+      var texturePath = THREE.ImageUtils.loadTexture("textures/texture.png");
+
+      var HUDPathMaterialColor = new THREE.MeshBasicMaterial({  map: texturePath });
+      HUDPathMaterialColor.transparent = true
+      HUDPathMaterialColor.opacity = 1;
+      var hudElement = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDPathMaterialColor);
+      hudElement.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
+      hudElement.position.z = -0.01;
+      hudElement.position.x = 1000;
+      hudElement.position.y = 500;
+      //HUDscene.add(hudElement);
+
+      var texturePath = THREE.ImageUtils.loadTexture("textures/star.png");
+
+      var HUDPathMaterialColor = new THREE.MeshBasicMaterial({  map: texturePath });
+      HUDPathMaterialColor.transparent = true
+      HUDPathMaterialColor.opacity = 1;
+      var hudElement = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDPathMaterialColor);
+      hudElement.scale.set(500, 500, 1);
+      hudElement.position.z = -0.01;
+      hudElement.position.x = 1000;
+      hudElement.position.y = 500;
+      //HUDscene.add(hudElement);
+
+      var pauseTexture = THREE.ImageUtils.loadTexture("textures/texture.png");
+      //pauseTexture.repeat.x = 0;
+      //pauseTexture.repeat.y = 0;
+
+      HUDPauseMaterial = new THREE.MeshBasicMaterial({ color: "black", map: pauseTexture });
+      HUDPauseMaterial.transparent = true
+      HUDPauseMaterial.opacity = 1;
+      var HUDPause = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDPauseMaterial);
+      HUDPause.scale.set(window.innerWidth*2, window.innerHeight*2, 1);
+      HUDPause.position.z = -0.01;
+      HUDscene.add(HUDPause);
 
       // ---
 
@@ -284,6 +324,22 @@
 
       // update rain
       rain.update(dt);
+
+      // show/hide pause
+      if(pause) {
+        // show pause
+        if(HUDPauseMaterial.opacity < 0.5)
+          HUDPauseMaterial.opacity = HUDPauseMaterial.opacity + 0.1;
+        else
+          HUDPauseMaterial.opacity = 0.5;
+      }
+      else {
+        // hide pause
+        if(HUDPauseMaterial.opacity > 0.1)
+          HUDPauseMaterial.opacity = HUDPauseMaterial.opacity - 0.1;
+        else
+          HUDPauseMaterial.opacity = 0;
+      }
 
       // show/hide hud
       updateHUDVisibility();

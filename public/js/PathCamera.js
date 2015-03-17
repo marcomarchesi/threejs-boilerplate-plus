@@ -71,7 +71,7 @@ function PathCamera(camera,curve) {
 
 PathCamera.prototype.takeStep = function(start, end, time, oculusEnabled) {
 
-        if(!isOverlayVisible) {
+        if(!pause) {
 
           var pos = {x:start};
           var target = {x:end};
