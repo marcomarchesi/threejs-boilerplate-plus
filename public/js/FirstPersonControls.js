@@ -150,14 +150,18 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 				case 65: /*A*/ this.moveLeft = true; break;
 
-				case 83: /*S*/ this.moveBackward = true; break;
-
 				case 68: /*D*/ this.moveRight = true; break;
+
+				case 83: /*S*/ this.moveBackward = true; break;	
 
 				case 82: /*R*/ this.moveUp = true; break;
 				case 70: /*F*/ this.moveDown = true; break;
-
 			}
+
+			if(pathEnabled) {
+					this.moveLeft = false;
+					this.moveRight = false;
+				}
 
 		}
 	};

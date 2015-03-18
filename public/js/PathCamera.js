@@ -4,18 +4,16 @@
 *
 */
 
-function PathCamera(camera,curve) {
+function PathCamera(camera, curve) {
 
   var SEGMENTS = 200;
   var RADIUS_SEGMENTS = 1;
 
   this.normal = new THREE.Vector3( 0, 1, 0 );
 
-
   this.path = new THREE.TubeGeometry(curve, SEGMENTS, 2, RADIUS_SEGMENTS, true); //true == closed curve
   this.startPoint = curve.points[0];
-  this.pathMesh = new THREE.Mesh(this.path,
-                new THREE.LineBasicMaterial( { color : 0xff0000 } ));
+  this.pathMesh = new THREE.Mesh(this.path, new THREE.LineBasicMaterial( { color : 0xff0000 } ));
   this.lookAhead = false;
   this.scale = 1.0;
   this.offset = 0;
@@ -92,5 +90,8 @@ PathCamera.prototype.takeStep = function(start, end, time, oculusEnabled) {
                         //TODO
                       })
                       .start();
+
+                      // minimap
+                      updatePointer();
         }
 };
