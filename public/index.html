@@ -40,7 +40,8 @@
 
       //Global variables.
 
-      var socket = io.connect('http://localhost:8888');
+      var socket = io.connect('http://localhost:8080');
+
 
       // body components
       var container, content;
@@ -66,7 +67,7 @@
       var clock = new THREE.Clock();
       var delta;
 
-      var pathEnabled = false; // set to true for runner camera; can be changed at runtime pressing shift
+      var pathEnabled = true; // set to true for runner camera; can be changed at runtime pressing shift
 
       // is it raining?
       var isRaining = false;

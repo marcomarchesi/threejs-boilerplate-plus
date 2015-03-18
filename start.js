@@ -6,7 +6,7 @@ var express = require('express');
 var io = require('socket.io');
 var http = require('http');
 var app = express();
-var port = 8888;
+var port = 8080;
 
 app.use(express.static(__dirname + '/public'));
 
