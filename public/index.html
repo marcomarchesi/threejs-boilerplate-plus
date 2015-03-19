@@ -54,6 +54,7 @@
 
       // scene scale
       var sceneX, sceneZ;
+      var mapX, mapY;
 
       var path;
       var step = 0;         // camera step
@@ -63,6 +64,8 @@
       var HUDElementMaterialColor;
       var pointerMesh;
       var hudMinimap;
+      var HUDMinimapMaterial;
+      var HUDPointerMaterial;
 
       var scene_mesh;
       var light;
@@ -157,11 +160,27 @@
       oculusRenderer.setSize( window.innerWidth, window.innerHeight );
 
       //add track
+      // old path
+      //var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
+      //  new THREE.Vector3(2, 0, -2),
+      //  new THREE.Vector3(2, 0, 2),
+      //  new THREE.Vector3(-2, 0, 2),
+      //  new THREE.Vector3(-2, 0, -2),
+      //] ); 
+
+      //add track
+      // new path
       var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-        new THREE.Vector3(2, 0, -2),
-        new THREE.Vector3(2, 0, 2),
-        new THREE.Vector3(-2, 0, 2),
-        new THREE.Vector3(-2, 0, -2),
+        new THREE.Vector3(-0.33,0.15,2.14),
+        new THREE.Vector3(-0.58,0.5,-2.94),
+        new THREE.Vector3(-4.7,0.35,-5.09),
+        new THREE.Vector3(-8.29,-0.09,-3.79),
+        new THREE.Vector3(-9.33,0.51,-2.15),
+        new THREE.Vector3(-8.0,0.45,1.31),
+        new THREE.Vector3(-7.21,0.22,4.3),
+        new THREE.Vector3(-0.01,-0.06,7.23),
+        new THREE.Vector3(-0.1,0.26,4.61),
+        new THREE.Vector3(-0.33,0.15,2.14),
       ] );
 
       // create cameras.
@@ -194,12 +213,12 @@
       hudElement.position.x = 1000;
       HUDscene.add(hudElement);
 
-      var texturePath = THREE.ImageUtils.loadTexture("textures/texture.png");
+      var texturePath = THREE.ImageUtils.loadTexture("textures/map.png");
 
-      var HUDPathMaterialColor = new THREE.MeshBasicMaterial({  map: texturePath });
-      HUDPathMaterialColor.transparent = true
-      HUDPathMaterialColor.opacity = 1;
-      hudMinimap = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.586), HUDPathMaterialColor);
+      HUDMinimapMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
+      HUDMinimapMaterial.transparent = true
+      HUDMinimapMaterial.opacity = 1;
+      hudMinimap = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.586), HUDMinimapMaterial);
       hudMinimap.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
       hudMinimap.position.z = -0.01;
       hudMinimap.position.x = 0;//1000;
@@ -208,7 +227,7 @@
 
       var texturePath = THREE.ImageUtils.loadTexture("textures/pointer.png");
 
-      var HUDPointerMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
+      HUDPointerMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
       HUDPointerMaterial.transparent = true
       HUDPointerMaterial.opacity = 1;
       pointerMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDPointerMaterial);
@@ -374,7 +393,8 @@
       }
 
       // show/hide hud
-      updateHUDVisibility();
+      var HUDElementsArray = [HUDElementMaterialColor, HUDMinimapMaterial, HUDPointerMaterial];
+      updateHUDVisibility(HUDElementsArray);
 
       // update pointer on map
       //updatePointer();
@@ -403,48 +423,71 @@
     function updatePointer() {
       //pointerMesh;
       //console.log("camera: " +camera.position.x);
-      console.log("pointer: " +pointerMesh.position.x);
-      // 500 x 500
-      // camera.position : 10 000 = x : 500
-      var x = (pathCamera.position.x * 500) / 1000;
-      var y = (pathCamera.position.z * 500) / 1000;
+      //console.log("pointer: " +pointerMesh.position.x);
 
-      if (controls.moveForward) {
-        pointerMesh.position.x = pointerMesh.position.x +(pathCamera.position.x/(mapX/sceneX))*250;
-        pointerMesh.position.y = pointerMesh.position.y +(pathCamera.position.z/(mapY/sceneZ))*250;
-      }
-      else {
-        pointerMesh.position.x = pointerMesh.position.x -(pathCamera.position.x/2);
-        pointerMesh.position.y = pointerMesh.position.y -(pathCamera.position.z/2); 
-      }
+      pointerMesh.position.x = mapX/3.6 + getPointerXPosition(mapX, sceneX, pathCamera.position.x) *1.45;
+      pointerMesh.position.y = -mapY/12.6 + getPointerYPosition(mapY, sceneZ, pathCamera.position.z) *1.20;
 
       pointerMesh.updateMatrix();
       pointerMesh.updateMatrixWorld();
 
     }
 
-    function updateHUDVisibility() {
-      // HUD fade out
-      if(controlGUI.HUDenabled == false && HUDisVisible) {
-        if(HUDElementMaterialColor.opacity != 0)
-          HUDElementMaterialColor.opacity = HUDElementMaterialColor.opacity - 0.1;
+    function getPointerXPosition(mapX, sceneX, pathCameraX) {
+      // pointerX : mapX = pathCameraX : sceneX
+      return (pathCameraX * mapX) / sceneX;;
+    }
 
-        if(HUDElementMaterialColor.opacity < 0.1) {
-          HUDisVisible = false;
-          HUDElementMaterialColor.opacity = 0;
+    function getPointerYPosition(mapY, sceneZ, pathCameraZ) {
+      // pointerX : mapX = pathCameraX : sceneX
+      return (pathCameraZ * mapY) / sceneZ;
+    }
+
+    function updateHUDVisibility(HUDElementsArray) {      
+
+
+      for (i = 0; i < HUDElementsArray.length; ++i) {
+         //console.log(HUDElementsArray[i] +"  opacity: " +HUDElementsArray[i].opacity, "is HUD visible ?" +HUDisVisible);
+
+
+         // HUD fade out
+        if(controlGUI.HUDenabled == false && HUDisVisible) {
+          if(HUDElementsArray[i].opacity != 0)
+            HUDElementsArray[i].opacity = HUDElementsArray[i].opacity - 0.1;
+
+          for(j=0; j<HUDElementsArray.length; j++) {
+
+            if(HUDElementsArray[j].opacity < 0.1) {
+              HUDisVisible = false;
+              HUDElementsArray[i].opacity = 0;
+            }
+            else 
+               HUDisVisible = true;
+          }
+
         }
+        // HUD fade in
+        else if (controlGUI.HUDenabled == true && !HUDisVisible) {
+          if(HUDElementsArray[i].opacity != 1)
+            HUDElementsArray[i].opacity = HUDElementsArray[i].opacity + 0.1;
 
-      }
-      // HUD fade in
-      else if (controlGUI.HUDenabled == true && !HUDisVisible) {
-        if(HUDElementMaterialColor.opacity != 1)
-          HUDElementMaterialColor.opacity = HUDElementMaterialColor.opacity + 0.1;
+          for(j=0; j<HUDElementsArray.length; j++) {
 
-        if(HUDElementMaterialColor.opacity > 0.9) {
-          HUDisVisible = true;
-          HUDElementMaterialColor.opacity = 1;
+            if(HUDElementsArray[j].opacity > 0.9) {
+              HUDisVisible = true;
+              HUDElementsArray[i].opacity = 1;
+            }
+            else 
+               HUDisVisible = false;
+          }
         }
       }
+
+      //for (var x in HUDElementsArray) {
+       //   console.log(x +"  opacity: " +x.opacity);
+      //}
+
+      
     }
 
     function addStats() {
@@ -458,35 +501,36 @@
 
     //load the scene
     function loadScene() {
-        loader.load("./models/scene.js",
-        function(model, materials){
+        loader.load("./models/scene2.js",
+        function(model, materials) {
           scene_mesh = new THREE.Mesh(model, new THREE.MeshFaceMaterial( materials ));
           scene_mesh.name = 'scene';
-          scene_mesh.rotation.y = Math.PI;
+          //scene_mesh.rotation.y = Math.PI;
           scene_mesh.receiveShadow = true;
           scene_mesh.castShadow = true;
           scene.add(scene_mesh);
 
+          //scene_mesh.scale.set(50, 50, 1);
+
           // i'm getting the scale factor here because 'scene_mesh' is loaded asynchronously
-          getMinimapScaleFactor();          
+          getSceneAndMapDimesion();          
         });
     }
 
-    function getMinimapScaleFactor() {
+    function getSceneAndMapDimesion() {
+
       // gettin mesh size sceneX x sceneZ
       var box = new THREE.Box3().setFromObject( scene_mesh );
-      //console.log( box.min, box.max, box.size() );
-      sceneX = 4;//box.size().x;
-      sceneZ = 4;//box.size().z;
 
-      //console.log(sceneX, sceneZ);
+      sceneX = box.size().x; // the real length of the path is 4
+      sceneZ = box.size().z;
 
       box = new THREE.Box3().setFromObject( hudMinimap );
       mapX = box.size().x;
       mapY = box.size().y;
 
       console.log("scene size: " +sceneX +" x " +sceneZ);
-      console.log("mini map size: " +mapX +" x " +mapY);
+      console.log("minimap size: " +mapX +" x " +mapY);
     }
     
     /**
