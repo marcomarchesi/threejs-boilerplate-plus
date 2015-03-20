@@ -58,7 +58,7 @@
       var mapX, mapY;
 
       var path;
-      var step = 0;         // camera step
+      var steps = 0;         // camera step
 
       // hud elments
       var HUD;
@@ -81,6 +81,10 @@
       // is it raining?
       var isRaining = false;
       var rain;
+
+      var running;
+      var normalStep = 2, runningStep = 4;
+      var step;
 
       var cube;
       var isTweening = false;
@@ -111,7 +115,16 @@
       };
       addControlGui(controlGUI);
 
-      // the overlay will fade in when 'esc' is released
+      window.onkeydown = function(e) {
+          var key = e.keyCode ? e.keyCode : e.which;
+
+          // 16 = shift
+          if (key == 16) {
+            running = true;
+          }
+
+      }
+
       window.onkeyup = function(e) {
           var key = e.keyCode ? e.keyCode : e.which;
 
@@ -123,16 +136,20 @@
               pause = true;
           }
 
-          // 16 = shift
-          if (key == 16) {
+          // 67 = c
+          if(key == 67) {
             switchCamera();
           }
 
-          // 79 = shift
+          // 16 = shift
+          if (key == 16) {
+            running = false;
+          }
+
+          // 79 = o
           if (key == 79) {
             oculusEnabled = oculusEnabled ? false : true;
           }
-
 
       }
 
@@ -193,7 +210,7 @@
 
       path = new PathCamera(pathCamera, sampleClosedSpline);
       // update path camera position
-      path.update(0,oculusEnabled);
+      path.update(0, oculusEnabled);
 
       // position and point the default camera to the center of the scene
       camera.position.x = 0;
@@ -206,7 +223,7 @@
       HUDscene = new THREE.Scene();
       HUDcamera = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, 0.01, 100);
 
-      HUD = new HUD(HUDscene, HUDisVisible);
+      HUD = new HUD(HUDscene, HUDisVisible, oculusEnabled);
 
       // add a random cube to the scene
       var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
@@ -282,16 +299,21 @@
     
     function render(dt) {
 
+      if(!running)
+        step = normalStep;
+      else
+        step = runningStep;
+
       // updating the position and orientation of the camera
       if ( controls.moveForward ) {
-        path.takeStep(step, step+2, 400, oculusEnabled);
-        step += 2;
+        path.takeStep(steps, steps+2, 400, oculusEnabled);
+        steps += step;
       }
         
       if ( controls.moveBackward ) {
-        if(step > 0) {
-          path.takeStep(step, step-2, 400, oculusEnabled);
-          step -= 2; 
+        if(steps > 0) {
+          path.takeStep(steps, steps-2, 400, oculusEnabled);
+          steps -= step; 
         }
       }
 
@@ -350,7 +372,7 @@
           scene_mesh.castShadow = true;
           scene.add(scene_mesh);
 
-          //scene_mesh.scale.set(50, 50, 1);
+          //scene_mesh.scale.set(5, 5, 1);
 
           // i'm getting the scale factor here because 'scene_mesh' is loaded asynchronously
           getSceneAndMapDimesion(scene_mesh);          

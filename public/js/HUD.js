@@ -5,24 +5,38 @@
 */
 
 var pauseTextMaterial, HUDPauseMaterial;
-var pointerMesh;
+var pointerMesh, redPointerMesh, LapCounterMesh;
 
 var HUDElementsArray;
 
-function HUD(HUDScene, HUDisVisible) {
+var gotStartingPoint = false, hasMoved;
+var numLap = 0;
+
+function HUD(HUDScene, HUDisVisible, oculusEnabled) {
 
   this.HUDisVisible = HUDisVisible;
 
+  var textCanvas = document.createElement('canvas');
+  var context = textCanvas.getContext('2d');
+  context.font = "Bold 30px Arial";
+  context.fillStyle = "rgba(255, 0, 0, 1)";
+  context.fillText('LAP number: 1', 0, 50);
+
+  // canvas contents will be used for a texture
+  var textTexture = new THREE.Texture(textCanvas) 
+  textTexture.needsUpdate = true;
+
   // load a sample texture
-  var texture = THREE.ImageUtils.loadTexture("textures/ui.png");
-  var HUDSampleMaterial = new THREE.MeshBasicMaterial({  map: texture });
+  //var texture = THREE.ImageUtils.loadTexture("textures/ui.png");
+  
+  var HUDSampleMaterial = new THREE.MeshBasicMaterial({  map: textTexture });
   HUDSampleMaterial.transparent = true
   HUDSampleMaterial.opacity = 1;
-  var hudElement = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDSampleMaterial);
-  hudElement.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
-  hudElement.position.z = -0.01;
-  hudElement.position.x = 1000;
-  HUDscene.add(hudElement);
+  LapCounterMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDSampleMaterial);
+  LapCounterMesh.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
+  LapCounterMesh.position.z = -0.01;
+  LapCounterMesh.position.x = 1000;
+  HUDscene.add(LapCounterMesh);
 
   // load minimap texture
   var texturePath = THREE.ImageUtils.loadTexture("textures/map.png");
@@ -30,7 +44,10 @@ function HUD(HUDScene, HUDisVisible) {
   HUDMinimapMaterial.transparent = true
   HUDMinimapMaterial.opacity = 1;
   var hudMinimapMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.586), HUDMinimapMaterial);
-  hudMinimapMesh.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
+  if(oculusEnabled)
+    hudMinimapMesh.scale.set(window.innerWidth / 3, window.innerHeight / 7, 1);
+  else
+    hudMinimapMesh.scale.set(window.innerWidth / 3, window.innerHeight / 3, 1);
   hudMinimapMesh.position.z = -0.01;
   hudMinimapMesh.position.x = 0;//1000;
   hudMinimapMesh.position.y = 0;//500;
@@ -39,6 +56,16 @@ function HUD(HUDScene, HUDisVisible) {
   this.minimap = hudMinimapMesh;
 
   // load pointer (on minimap) texture
+
+  var texturePath = THREE.ImageUtils.loadTexture("textures/pointer_red.png");
+  var HUDRedPointerMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
+  HUDRedPointerMaterial.transparent = true
+  HUDRedPointerMaterial.opacity = 1;
+  redPointerMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDRedPointerMaterial);
+  redPointerMesh.scale.set(20, 20, 1);
+  redPointerMesh.position.z = -0.01;
+  HUDscene.add(redPointerMesh);
+
   var texturePath = THREE.ImageUtils.loadTexture("textures/pointer.png");
   var HUDPointerMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
   HUDPointerMaterial.transparent = true
@@ -79,7 +106,7 @@ function HUD(HUDScene, HUDisVisible) {
 
   // ---
 
-  HUDElementsArray = [HUDSampleMaterial, HUDMinimapMaterial, HUDPointerMaterial];
+  HUDElementsArray = [HUDSampleMaterial, HUDMinimapMaterial, HUDPointerMaterial, HUDRedPointerMaterial];
 
   // if the HUD is not visibile, hide it.
   if(!this.HUDisVisible) {
@@ -133,6 +160,46 @@ function updatePointerPosition(mapX, mapY, sceneX, sceneZ, pathCameraX, pathCame
 
       pointerMesh.updateMatrix();
       pointerMesh.updateMatrixWorld();
+
+      // set the red point (start)
+      if(!gotStartingPoint && !isNaN(pointerMesh.position.x)) {
+
+        redPointerMesh.position.x = pointerMesh.position.x;
+        redPointerMesh.position.y = pointerMesh.position.y;
+
+        redPointerMesh.updateMatrix();
+        redPointerMesh.updateMatrixWorld();
+
+        gotStartingPoint = true;
+      }
+
+      if(gotStartingPoint && pointerMesh.position.x != redPointerMesh.position.x)
+        hasMoved = true;
+
+      if( (!isNaN(pointerMesh.position.x) && hasMoved)  && Math.floor(pointerMesh.position.x) == Math.floor(redPointerMesh.position.x) && Math.floor(pointerMesh.position.y) == Math.floor(redPointerMesh.position.y)) {
+        numLap++;
+        console.log(numLap);
+
+        var textCanvas = document.createElement('canvas');
+        var context = textCanvas.getContext('2d');
+        context.font = "Bold 30px Arial";
+        context.fillStyle = "rgba(255, 0, 0, 1)";
+        context.fillText("LAP number: " +numLap, 0, 50);
+
+        // canvas contents will be used for a texture
+        var textTexture = new THREE.Texture(textCanvas) 
+        textTexture.needsUpdate = true;
+
+        var HUDSampleMaterial = new THREE.MeshBasicMaterial({  map: textTexture });
+        HUDSampleMaterial.transparent = true
+        HUDSampleMaterial.opacity = 1;
+
+        LapCounterMesh.material = HUDSampleMaterial;
+      }
+
+      //console.log("pointer: " +pointerMesh.position.x);
+
+
 }
 
 function getPointerXPosition(mapX, sceneX, pathCameraX) {
