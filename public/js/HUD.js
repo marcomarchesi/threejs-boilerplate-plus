@@ -9,7 +9,7 @@ var pointerMesh, redPointerMesh, LapCounterMesh;
 
 var HUDElementsArray;
 
-var gotStartingPoint = false, hasMoved;
+var gotStartingPoint = false, hasMoved = false;
 var numLap = 0;
 
 function HUD(HUDScene, HUDisVisible, oculusEnabled) {
@@ -20,7 +20,7 @@ function HUD(HUDScene, HUDisVisible, oculusEnabled) {
   var context = textCanvas.getContext('2d');
   context.font = "Bold 30px Arial";
   context.fillStyle = "rgba(255, 0, 0, 1)";
-  context.fillText('LAP number: 1', 0, 50);
+  context.fillText("LAP number: " +numLap, 0, 50);
 
   // canvas contents will be used for a texture
   var textTexture = new THREE.Texture(textCanvas) 
@@ -28,7 +28,7 @@ function HUD(HUDScene, HUDisVisible, oculusEnabled) {
 
   // load a sample texture
   //var texture = THREE.ImageUtils.loadTexture("textures/ui.png");
-  
+
   var HUDSampleMaterial = new THREE.MeshBasicMaterial({  map: textTexture });
   HUDSampleMaterial.transparent = true
   HUDSampleMaterial.opacity = 1;
@@ -173,12 +173,22 @@ function updatePointerPosition(mapX, mapY, sceneX, sceneZ, pathCameraX, pathCame
         gotStartingPoint = true;
       }
 
-      if(gotStartingPoint && pointerMesh.position.x != redPointerMesh.position.x)
-        hasMoved = true;
+      var lapCounterPrecision = 2;
 
-      if( (!isNaN(pointerMesh.position.x) && hasMoved)  && Math.floor(pointerMesh.position.x) == Math.floor(redPointerMesh.position.x) && Math.floor(pointerMesh.position.y) == Math.floor(redPointerMesh.position.y)) {
+      if( (gotStartingPoint) &&
+        ( (Math.floor(pointerMesh.position.x) <= Math.floor(redPointerMesh.position.x)-lapCounterPrecision) ||  Math.floor(pointerMesh.position.x) >= Math.floor(redPointerMesh.position.x)+lapCounterPrecision ) &&
+        ( (Math.floor(pointerMesh.position.y) <= Math.floor(redPointerMesh.position.y)-lapCounterPrecision) ||  Math.floor(pointerMesh.position.y) >= Math.floor(redPointerMesh.position.y)+lapCounterPrecision ) ) { 
+         hasMoved = true;
+      }
+
+      if( (!isNaN(pointerMesh.position.x) && hasMoved) &&
+        ( (Math.floor(redPointerMesh.position.x) >= Math.floor(pointerMesh.position.x)-lapCounterPrecision) &&  Math.floor(redPointerMesh.position.x) <= Math.floor(pointerMesh.position.x)+lapCounterPrecision ) &&
+        ( (Math.floor(redPointerMesh.position.y) >= Math.floor(pointerMesh.position.y)-lapCounterPrecision) &&  Math.floor(redPointerMesh.position.y) <= Math.floor(pointerMesh.position.y)+lapCounterPrecision ) ) { 
+        
         numLap++;
-        console.log(numLap);
+
+        // not exited the 'lap counter range' yet
+        hasMoved = false;
 
         var textCanvas = document.createElement('canvas');
         var context = textCanvas.getContext('2d');
@@ -196,10 +206,6 @@ function updatePointerPosition(mapX, mapY, sceneX, sceneZ, pathCameraX, pathCame
 
         LapCounterMesh.material = HUDSampleMaterial;
       }
-
-      //console.log("pointer: " +pointerMesh.position.x);
-
-
 }
 
 function getPointerXPosition(mapX, sceneX, pathCameraX) {
