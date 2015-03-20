@@ -3,10 +3,13 @@
 
 
 var express = require('express');
+<<<<<<< HEAD
 var io = require('socket.io');
 var http = require('http');
+=======
+>>>>>>> final
 var app = express();
-var port = 8080;
+var port = 8888;
 
 app.use(express.static(__dirname + '/public'));
 
