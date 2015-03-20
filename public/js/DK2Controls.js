@@ -65,33 +65,37 @@ THREE.DK2Controls = function(camera) {
   
   
   this.onKeyDown = function (event) {
-    switch (event.keyCode) {
+
+    if(!pause) {
       
-      case 87: /*W*/
-        this.wasd.up = true;
-        this.moveForward = true;
-        break;
-
-      case 83: /*S*/
-        this.wasd.down = true;
-        this.moveBackward = true;
-        break;
-
-      case 68: /*D*/
-        this.wasd.right = true;
-        break;
-
-      case 65: /*A*/
-          this.wasd.left = true;
+      switch (event.keyCode) {
+        
+        case 87: /*W*/
+          this.wasd.up = true;
+          this.moveForward = true;
           break;
 
-      case 82: /*R*/
-          this.moveUp = true; 
+        case 83: /*S*/
+          this.wasd.down = true;
+          this.moveBackward = true;
           break;
 
-      case 70: /*F*/
-          this.moveDown = true;
+        case 68: /*D*/
+          this.wasd.right = true;
           break;
+
+        case 65: /*A*/
+            this.wasd.left = true;
+            break;
+
+        case 82: /*R*/
+            this.moveUp = true; 
+            break;
+
+        case 70: /*F*/
+            this.moveDown = true;
+            break;
+      }
 
     }
   };
