@@ -35,6 +35,7 @@
     <script type="text/javascript" src="js/PathCamera.js"></script>
     <script type="text/javascript" src="js/DK2Controls.js"></script>
     <script type="text/javascript" src="js/dat.gui.min.js"></script>
+    <script type="text/javascript" src="js/HUD.js"></script>
 
     <script type="text/javascript">
 
@@ -60,12 +61,11 @@
       var step = 0;         // camera step
 
       // hud elments
+      var HUD;
       var HUDisVisible = true;
-      var HUDElementMaterialColor;
-      var pointerMesh;
-      var hudMinimap;
-      var HUDMinimapMaterial;
-      var HUDPointerMaterial;
+
+      // game state
+      var pause = true;
 
       var scene_mesh;
       var light;
@@ -85,12 +85,8 @@
       var cube;
       var isTweening = false;
 
-      // game state
-      var HUDPauseMaterial;
-      var textMaterial;
-      var pause = true;
-
       var controlGUI;
+      var oculusEnabled = false;
 
       function init() {
 
@@ -111,7 +107,6 @@
 
       // setup the control object for the control gui
       controlGUI = new function() {
-          this.oculusEnabled = false;
           this.HUDenabled = HUDisVisible;
       };
       addControlGui(controlGUI);
@@ -132,6 +127,13 @@
           if (key == 16) {
             switchCamera();
           }
+
+          // 79 = shift
+          if (key == 79) {
+            oculusEnabled = oculusEnabled ? false : true;
+          }
+
+
       }
 
       function switchCamera() {
@@ -190,84 +192,21 @@
       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 30);
 
       path = new PathCamera(pathCamera, sampleClosedSpline);
+      // update path camera position
+      path.update(0,oculusEnabled);
 
       // position and point the default camera to the center of the scene
       camera.position.x = 0;
       camera.position.y = 1;
       camera.position.z = 0;
 
+      
       // --- hud
       // create a scene that will hold all hud elements and an ortho camera to always show them on top of the game scene
       HUDscene = new THREE.Scene();
       HUDcamera = new THREE.OrthographicCamera(-window.innerWidth, window.innerWidth, window.innerHeight, -window.innerHeight, 0.01, 100);
 
-      // load a sample texture
-      var texture = THREE.ImageUtils.loadTexture("textures/ui.png");
-
-      HUDElementMaterialColor = new THREE.MeshBasicMaterial({  map: texture });
-      HUDElementMaterialColor.transparent = true
-      HUDElementMaterialColor.opacity = 1;
-      var hudElement = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDElementMaterialColor);
-      hudElement.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
-      hudElement.position.z = -0.01;
-      hudElement.position.x = 1000;
-      HUDscene.add(hudElement);
-
-      var texturePath = THREE.ImageUtils.loadTexture("textures/map.png");
-
-      HUDMinimapMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
-      HUDMinimapMaterial.transparent = true
-      HUDMinimapMaterial.opacity = 1;
-      hudMinimap = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.586), HUDMinimapMaterial);
-      hudMinimap.scale.set(window.innerWidth / 2, window.innerHeight / 2, 1);
-      hudMinimap.position.z = -0.01;
-      hudMinimap.position.x = 0;//1000;
-      hudMinimap.position.y = 0;//500;
-      HUDscene.add(hudMinimap);
-
-      var texturePath = THREE.ImageUtils.loadTexture("textures/pointer.png");
-
-      HUDPointerMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
-      HUDPointerMaterial.transparent = true
-      HUDPointerMaterial.opacity = 1;
-      pointerMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDPointerMaterial);
-      pointerMesh.scale.set(20, 20, 1);
-      pointerMesh.position.z = -0.01;
-      pointerMesh.position.x = -180;
-      pointerMesh.position.y = -180;
-      HUDscene.add(pointerMesh);
-
-      // ---- PAUSE STATE STUFF 
-      // create text
-      // create a canvas element
-      var textCanvas = document.createElement('canvas');
-      var context = textCanvas.getContext('2d');
-      context.font = "Bold 40px Arial";
-      context.fillStyle = "rgba(255,0,0,0.95)";
-      context.fillText('PAUSE', 0, 50);
-    
-      // canvas contents will be used for a texture
-      var textTexture = new THREE.Texture(textCanvas) 
-      textTexture.needsUpdate = true;
-
-      textMaterial = new THREE.MeshBasicMaterial( {map: textTexture, side:THREE.DoubleSide } );
-      textMaterial.transparent = true;
-      var textMesh = new THREE.Mesh( new THREE.PlaneGeometry(textCanvas.width, textCanvas.height), textMaterial );
-      textMesh.position.z = -0.01;
-
-      HUDscene.add(textMesh);
-
-      var pauseTexture = THREE.ImageUtils.loadTexture("textures/texture.png");
-      HUDPauseMaterial = new THREE.MeshBasicMaterial({ color: "black", map: pauseTexture });
-      HUDPauseMaterial.transparent = true
-      HUDPauseMaterial.opacity = 1;
-      var HUDPause = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), HUDPauseMaterial);
-      HUDPause.scale.set(window.innerWidth*2, window.innerHeight*2, 1);
-      HUDPause.position.z = -0.01;
-
-      HUDscene.add(HUDPause);
-
-      // ---
+      HUD = new HUD(HUDscene, HUDisVisible);
 
       // add a random cube to the scene
       var cubeGeometry = new THREE.CubeGeometry(1, 1, 1);
@@ -326,13 +265,12 @@
 
     function addControlGui(controlObject) {
         var gui = new dat.GUI();
-        gui.add(controlObject, 'oculusEnabled', false);
         gui.add(controlObject, 'HUDenabled', true);
     }
 
     function setControls() {
       // Oculus DK2 controls
-      if(controlGUI.oculusEnabled == true)
+      if(oculusEnabled == true)
         controls = new THREE.DK2Controls(pathEnabled === true ? pathCamera : camera);
       else {
         controls = new THREE.FirstPersonControls( pathEnabled === true ? pathCamera : camera);
@@ -346,13 +284,13 @@
 
       // updating the position and orientation of the camera
       if ( controls.moveForward ) {
-        path.takeStep(step, step+2, 400, controlGUI.oculusEnabled);
+        path.takeStep(step, step+2, 400, oculusEnabled);
         step += 2;
       }
         
       if ( controls.moveBackward ) {
         if(step > 0) {
-          path.takeStep(step, step-2, 400, controlGUI.oculusEnabled);
+          path.takeStep(step, step-2, 400, oculusEnabled);
           step -= 2; 
         }
       }
@@ -368,44 +306,16 @@
       // update rain
       rain.update(dt);
 
-      // show/hide pause
-      if(pause) {
-        // show pause
-        if(HUDPauseMaterial.opacity < 0.5) {
-          HUDPauseMaterial.opacity = HUDPauseMaterial.opacity + 0.1;
-          textMaterial.opacity = textMaterial.opacity + 0.1;
-        }
-        else {
-          HUDPauseMaterial.opacity = 0.5;
-          textMaterial.opacity = 1;
-        }
-      }
-      else {
-        // hide pause
-        if(HUDPauseMaterial.opacity > 0.1) {
-          HUDPauseMaterial.opacity = HUDPauseMaterial.opacity - 0.1;
-          textMaterial.opacity = textMaterial.opacity - 0.1;
-        }
-        else {
-          HUDPauseMaterial.opacity = 0;
-          textMaterial.opacity = 0;
-        }
-      }
-
-      // show/hide hud
-      var HUDElementsArray = [HUDElementMaterialColor, HUDMinimapMaterial, HUDPointerMaterial];
-      updateHUDVisibility(HUDElementsArray);
-
-      // update pointer on map
-      //updatePointer();
+      // update HUD
+      HUD.update(pause, mapX, mapY, sceneX, sceneZ, pathCamera.position.x, pathCamera.position.z, oculusEnabled);
 
       // update
       renderer.autoClear = false;
-      if(controlGUI.oculusEnabled == true) {
+      if(oculusEnabled == true) {
         oculusRenderer.render( scene, pathEnabled === true ? pathCamera : camera, HUDscene);
       }
       else {
-        // if we just switched to the normal renderer from the oculusRenderer, we have to reset render area size
+        // if we just switched to the normal renderer from the oculusRenderer, we have to reset the render area size
         renderer.setSize(window.innerWidth, window.innerHeight);
 
         renderer.clear();
@@ -419,76 +329,6 @@
     }
 
     var prevX = -10000, prevY = -10000;
-
-    function updatePointer() {
-      //pointerMesh;
-      //console.log("camera: " +camera.position.x);
-      //console.log("pointer: " +pointerMesh.position.x);
-
-      pointerMesh.position.x = mapX/3.6 + getPointerXPosition(mapX, sceneX, pathCamera.position.x) *1.45;
-      pointerMesh.position.y = -mapY/12.6 + getPointerYPosition(mapY, sceneZ, pathCamera.position.z) *1.20;
-
-      pointerMesh.updateMatrix();
-      pointerMesh.updateMatrixWorld();
-
-    }
-
-    function getPointerXPosition(mapX, sceneX, pathCameraX) {
-      // pointerX : mapX = pathCameraX : sceneX
-      return (pathCameraX * mapX) / sceneX;;
-    }
-
-    function getPointerYPosition(mapY, sceneZ, pathCameraZ) {
-      // pointerX : mapX = pathCameraX : sceneX
-      return (pathCameraZ * mapY) / sceneZ;
-    }
-
-    function updateHUDVisibility(HUDElementsArray) {      
-
-
-      for (i = 0; i < HUDElementsArray.length; ++i) {
-         //console.log(HUDElementsArray[i] +"  opacity: " +HUDElementsArray[i].opacity, "is HUD visible ?" +HUDisVisible);
-
-
-         // HUD fade out
-        if(controlGUI.HUDenabled == false && HUDisVisible) {
-          if(HUDElementsArray[i].opacity != 0)
-            HUDElementsArray[i].opacity = HUDElementsArray[i].opacity - 0.1;
-
-          for(j=0; j<HUDElementsArray.length; j++) {
-
-            if(HUDElementsArray[j].opacity < 0.1) {
-              HUDisVisible = false;
-              HUDElementsArray[i].opacity = 0;
-            }
-            else 
-               HUDisVisible = true;
-          }
-
-        }
-        // HUD fade in
-        else if (controlGUI.HUDenabled == true && !HUDisVisible) {
-          if(HUDElementsArray[i].opacity != 1)
-            HUDElementsArray[i].opacity = HUDElementsArray[i].opacity + 0.1;
-
-          for(j=0; j<HUDElementsArray.length; j++) {
-
-            if(HUDElementsArray[j].opacity > 0.9) {
-              HUDisVisible = true;
-              HUDElementsArray[i].opacity = 1;
-            }
-            else 
-               HUDisVisible = false;
-          }
-        }
-      }
-
-      //for (var x in HUDElementsArray) {
-       //   console.log(x +"  opacity: " +x.opacity);
-      //}
-
-      
-    }
 
     function addStats() {
       stats = new Stats();
@@ -513,11 +353,11 @@
           //scene_mesh.scale.set(50, 50, 1);
 
           // i'm getting the scale factor here because 'scene_mesh' is loaded asynchronously
-          getSceneAndMapDimesion();          
+          getSceneAndMapDimesion(scene_mesh);          
         });
     }
 
-    function getSceneAndMapDimesion() {
+    function getSceneAndMapDimesion(scene_mesh) {
 
       // gettin mesh size sceneX x sceneZ
       var box = new THREE.Box3().setFromObject( scene_mesh );
@@ -525,12 +365,15 @@
       sceneX = box.size().x; // the real length of the path is 4
       sceneZ = box.size().z;
 
-      box = new THREE.Box3().setFromObject( hudMinimap );
+      box = new THREE.Box3().setFromObject( HUD.minimap );
       mapX = box.size().x;
       mapY = box.size().y;
 
       console.log("scene size: " +sceneX +" x " +sceneZ);
       console.log("minimap size: " +mapX +" x " +mapY);
+
+      //updatePointerPosition();
+      //HUD.updatePointerPosition(mapX, mapY, sceneX, sceneZ, pathCamera.position.x, pathCamera.position.z);
     }
     
     /**

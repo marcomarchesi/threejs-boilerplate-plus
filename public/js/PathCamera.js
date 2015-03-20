@@ -90,8 +90,5 @@ PathCamera.prototype.takeStep = function(start, end, time, oculusEnabled) {
                         //TODO
                       })
                       .start();
-
-                      // minimap
-                      updatePointer();
         }
 };
