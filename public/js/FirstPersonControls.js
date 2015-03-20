@@ -123,6 +123,8 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	// };
 
 	this.onMouseMove = function ( event ) {
+
+		if(!pause) {
 			
 			if ( this.domElement === document ) {
 
@@ -135,10 +137,12 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 				this.mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
 
 			}
-
+		}
 	};
 
 	this.onKeyDown = function ( event ) {
+
+		if(!pause) {
 
 			switch ( event.keyCode ) {
 
@@ -146,14 +150,20 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 				case 65: /*A*/ this.moveLeft = true; break;
 
-				case 83: /*S*/ this.moveBackward = true; break;
-
 				case 68: /*D*/ this.moveRight = true; break;
+
+				case 83: /*S*/ this.moveBackward = true; break;	
 
 				case 82: /*R*/ this.moveUp = true; break;
 				case 70: /*F*/ this.moveDown = true; break;
-
 			}
+
+			if(pathEnabled) {
+					this.moveLeft = false;
+					this.moveRight = false;
+				}
+
+		}
 	};
 
 	this.onKeyUp = function ( event ) {
@@ -180,7 +190,7 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 	};
 
 	this.update = function( delta ) {
-
+		if(!pause) {
 			if ( this.enabled === false ) return;
 
 			if ( this.heightSpeed ) {
@@ -247,6 +257,10 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 				this.object.lookAt( targetPosition );
 			}
+		} else {
+			this.mouseX = 0;
+			this.mouseY = 0;
+		}
 	};
 
 
