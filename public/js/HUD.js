@@ -16,6 +16,7 @@ function HUD(HUDScene, HUDisVisible, oculusEnabled) {
 
   this.HUDisVisible = HUDisVisible;
 
+  // lap counter texture
   var textCanvas = document.createElement('canvas');
   var context = textCanvas.getContext('2d');
   context.font = "Bold 30px Arial";
@@ -28,7 +29,6 @@ function HUD(HUDScene, HUDisVisible, oculusEnabled) {
 
   // load a sample texture
   //var texture = THREE.ImageUtils.loadTexture("textures/ui.png");
-
   var HUDSampleMaterial = new THREE.MeshBasicMaterial({  map: textTexture });
   HUDSampleMaterial.transparent = true
   HUDSampleMaterial.opacity = 1;
@@ -56,7 +56,6 @@ function HUD(HUDScene, HUDisVisible, oculusEnabled) {
   this.minimap = hudMinimapMesh;
 
   // load pointer (on minimap) texture
-
   var texturePath = THREE.ImageUtils.loadTexture("textures/pointer_red.png");
   var HUDRedPointerMaterial = new THREE.MeshBasicMaterial({  map: texturePath });
   HUDRedPointerMaterial.transparent = true
@@ -106,7 +105,7 @@ function HUD(HUDScene, HUDisVisible, oculusEnabled) {
 
   // ---
 
-  HUDElementsArray = [HUDSampleMaterial, HUDMinimapMaterial, HUDPointerMaterial, HUDRedPointerMaterial];
+  HUDElementsArray = [HUDSampleMaterial, HUDMinimapMaterial, HUDPointerMaterial, HUDRedPointerMaterial, LapCounterMesh];
 
   // if the HUD is not visibile, hide it.
   if(!this.HUDisVisible) {
@@ -175,12 +174,14 @@ function updatePointerPosition(mapX, mapY, sceneX, sceneZ, pathCameraX, pathCame
 
       var lapCounterPrecision = 2;
 
+      // if true, the pointer has exited the 'lap counter range'
       if( (gotStartingPoint) &&
         ( (Math.floor(pointerMesh.position.x) <= Math.floor(redPointerMesh.position.x)-lapCounterPrecision) ||  Math.floor(pointerMesh.position.x) >= Math.floor(redPointerMesh.position.x)+lapCounterPrecision ) &&
         ( (Math.floor(pointerMesh.position.y) <= Math.floor(redPointerMesh.position.y)-lapCounterPrecision) ||  Math.floor(pointerMesh.position.y) >= Math.floor(redPointerMesh.position.y)+lapCounterPrecision ) ) { 
          hasMoved = true;
       }
 
+      // checks if a lap has been completed. If yes numLap++
       if( (!isNaN(pointerMesh.position.x) && hasMoved) &&
         ( (Math.floor(redPointerMesh.position.x) >= Math.floor(pointerMesh.position.x)-lapCounterPrecision) &&  Math.floor(redPointerMesh.position.x) <= Math.floor(pointerMesh.position.x)+lapCounterPrecision ) &&
         ( (Math.floor(redPointerMesh.position.y) >= Math.floor(pointerMesh.position.y)-lapCounterPrecision) &&  Math.floor(redPointerMesh.position.y) <= Math.floor(pointerMesh.position.y)+lapCounterPrecision ) ) { 
@@ -190,6 +191,7 @@ function updatePointerPosition(mapX, mapY, sceneX, sceneZ, pathCameraX, pathCame
         // not exited the 'lap counter range' yet
         hasMoved = false;
 
+        // creating a texture to update the lap counter
         var textCanvas = document.createElement('canvas');
         var context = textCanvas.getContext('2d');
         context.font = "Bold 30px Arial";
@@ -204,6 +206,7 @@ function updatePointerPosition(mapX, mapY, sceneX, sceneZ, pathCameraX, pathCame
         HUDSampleMaterial.transparent = true
         HUDSampleMaterial.opacity = 1;
 
+        // update material
         LapCounterMesh.material = HUDSampleMaterial;
       }
 }
