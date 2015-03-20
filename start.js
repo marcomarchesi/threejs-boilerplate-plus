@@ -3,11 +3,6 @@
 
 
 var express = require('express');
-<<<<<<< HEAD
-var io = require('socket.io');
-var http = require('http');
-=======
->>>>>>> final
 var app = express();
 var port = 8888;
 
