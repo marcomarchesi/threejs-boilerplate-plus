@@ -206,7 +206,12 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 			}
 
-			var actualMoveSpeed = delta * this.movementSpeed;
+			var actualMoveSpeed;
+			if(!running)
+				actualMoveSpeed = delta * this.movementSpeed;
+			else
+				actualMoveSpeed = delta * this.movementSpeed*2;
+
 
 			if ( this.moveForward || ( this.autoForward && !this.moveBackward ) ) this.object.translateZ( - ( actualMoveSpeed + this.autoSpeedFactor ) );
 			if ( this.moveBackward ) this.object.translateZ( actualMoveSpeed );

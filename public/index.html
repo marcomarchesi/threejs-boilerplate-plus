@@ -76,7 +76,7 @@
       var clock = new THREE.Clock();
       var delta;
 
-      var pathEnabled = false; // set to true for runner camera; can be changed at runtime pressing shift
+      var pathEnabled = true; // set to true for runner camera; can be changed at runtime pressing shift
 
       // is it raining?
       var isRaining = false;
@@ -89,8 +89,8 @@
       var cube;
       var isTweening = false;
 
-      var controlGUI;
-      var oculusEnabled = false;
+      var oculusEnabled = true;
+      var HUDEnabled = true;
 
       function init() {
 
@@ -108,12 +108,6 @@
       document.body.appendChild(container);
 
       // ---------------------------------------------
-
-      // setup the control object for the control gui
-      controlGUI = new function() {
-          this.HUDenabled = HUDisVisible;
-      };
-      addControlGui(controlGUI);
 
       window.onkeydown = function(e) {
           var key = e.keyCode ? e.keyCode : e.which;
@@ -151,6 +145,11 @@
             oculusEnabled = oculusEnabled ? false : true;
           }
 
+          // 72 = h
+          if (key == 72) {
+            HUDEnabled = HUDEnabled ? false : true;
+          }
+
       }
 
       function switchCamera() {
@@ -177,15 +176,6 @@
         // worldScale 100 means that 100 Units == 1m
       oculusRenderer = new THREE.OculusRiftEffect( renderer, {worldScale: 100} );
       oculusRenderer.setSize( window.innerWidth, window.innerHeight );
-
-      //add track
-      // old path
-      //var sampleClosedSpline = new THREE.ClosedSplineCurve3( [
-      //  new THREE.Vector3(2, 0, -2),
-      //  new THREE.Vector3(2, 0, 2),
-      //  new THREE.Vector3(-2, 0, 2),
-      //  new THREE.Vector3(-2, 0, -2),
-      //] ); 
 
       //add track
       // new path
@@ -280,11 +270,6 @@
       render(0.016);
     }
 
-    function addControlGui(controlObject) {
-        var gui = new dat.GUI();
-        gui.add(controlObject, 'HUDenabled', true);
-    }
-
     function setControls() {
       // Oculus DK2 controls
       if(oculusEnabled == true)
@@ -363,20 +348,20 @@
 
     //load the scene
     function loadScene() {
-        loader.load("./models/scene2.js",
-        function(model, materials) {
-          scene_mesh = new THREE.Mesh(model, new THREE.MeshFaceMaterial( materials ));
-          scene_mesh.name = 'scene';
-          //scene_mesh.rotation.y = Math.PI;
-          scene_mesh.receiveShadow = true;
-          scene_mesh.castShadow = true;
-          scene.add(scene_mesh);
+      loader.load("./models/scene2.js",
+      function(model, materials) {
+        scene_mesh = new THREE.Mesh(model, new THREE.MeshFaceMaterial( materials ));
+        scene_mesh.name = 'scene';
+        //scene_mesh.rotation.y = Math.PI;
+        scene_mesh.receiveShadow = true;
+        scene_mesh.castShadow = true;
+        scene.add(scene_mesh);
 
-          //scene_mesh.scale.set(5, 5, 1);
+        //scene_mesh.scale.set(5, 5, 1);
 
-          // i'm getting the scale factor here because 'scene_mesh' is loaded asynchronously
-          getSceneAndMapDimesion(scene_mesh);          
-        });
+        // i'm getting the scale factor here because 'scene_mesh' is loaded asynchronously
+        getSceneAndMapDimesion(scene_mesh);          
+      });
     }
 
     function getSceneAndMapDimesion(scene_mesh) {
