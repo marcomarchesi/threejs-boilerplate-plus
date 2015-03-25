@@ -4,6 +4,8 @@
  * Effect to render the scene in stereo 3d side by side with lens distortion.
  * It is written to be used with the Oculus Rift (http://www.oculusvr.com/) but
  * it works also with other HMD using the same technology
+
+ 	@modified by Pierfrancesco Soffritti
  */
 
 THREE.OculusRiftEffect = function ( renderer, options ) {
@@ -13,6 +15,7 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 	// Specific HMD parameters
 	var HMD = (options && options.HMD) ? options.HMD: {
 		// DK1
+
 		/*
 		hResolution: 1280,
 		vResolution: 800,
@@ -24,6 +27,7 @@ THREE.OculusRiftEffect = function ( renderer, options ) {
 		distortionK : [1.0, 0.22, 0.24, 0.0],
 		chromaAbParameter: [ 0.996, -0.004, 1.014, 0.0]
 		*/
+
 		// DK2
 		hResolution: 1920,
 		vResolution: 1080,
