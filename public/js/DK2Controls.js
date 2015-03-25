@@ -147,7 +147,7 @@ THREE.DK2Controls = function(camera) {
 
       this.lastId = id;
     }
-      
+
     // update position
     if (this.wasd.up)
       this.controller.translateZ(-this.translationSpeed * delta);
